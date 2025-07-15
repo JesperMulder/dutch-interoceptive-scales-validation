@@ -52,7 +52,7 @@
 
 # ├── requirements.txt          # Python dependencies
 
-# ├── analysis.py              # Main analysis script
+# ├── questionnaire_validation_analysis.py              # Main analysis script
 
 # ├── data/                    # Data files (not included in public repo)
 
