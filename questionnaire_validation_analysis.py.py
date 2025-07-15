@@ -1,15 +1,20 @@
 """
-Validation of Dutch Interoceptive Accuracy Scale (IAS) and Interoceptive Attention Scale (IATS)
+Dutch Interoceptive Scales Validation Analysis
+==============================================
 
-This script performs psychometric validation analyses for the Dutch translations of the 
-Interoceptive Accuracy Scale and Interoceptive Attention Scale.
+This script performs validation analyses on Dutch translations of:
+- Interoceptive Accuracy Scale (IAS) 
+- Interoceptive Attention Scale (IATS)
 
-Reference: [Your paper citation will go here]
+Key variables retained: Persoon_ID, Leeftijd, Geslacht, IAS, IATS, BPQ, ICQ, BDI, TAS
+Analyses: PCA, Internal Consistency, CFA (1-4 factors), Regression
 
-Authors: [Your name]
-Date: [Date]
+Author: J. Mulder
+Date: 15-07-2025
+Reference: https://www.medrxiv.org/content/10.1101/2025.05.06.25326009v1.full-text
 """
 
+#%% Import packages
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,735 +31,441 @@ warnings.filterwarnings('ignore')
 
 # Set display options
 pd.set_option('display.max_columns', None)
-sns.set(style="whitegrid")
-plt.rcParams['figure.figsize'] = (10, 6)
+sns.set_style("whitegrid")
 
-def load_data(file_path):
-    """
-    Load the dataset from the specified file path.
+#%% Configuration
+# File paths - UPDATE THESE FOR YOUR SETUP
+DATA_PATH = 'data/your_data.sav'  # Place your data file in the data/ folder
+OUTPUT_PATH = 'output/'
+
+# Analysis parameters
+OUTLIER_THRESHOLD = 3  # Z-score threshold for outlier removal
+RANDOM_STATE = 42
+PCA_VARIANCE_THRESHOLD = 0.70
+
+#%% Data Loading and Preparation
+def load_and_prepare_data(file_path):
+    """Load data and prepare essential variables"""
+    print("Loading data...")
     
-    Parameters:
-    file_path (str): Path to the data file
-    
-    Returns:
-    pd.DataFrame: Loaded dataset
-    """
     try:
-        df = pd.read_spss(file_path, convert_categoricals=False)
+        # Load data (adjust based on your file format)
+        if file_path.endswith('.sav'):
+            df = pd.read_spss(file_path, convert_categoricals=False)
+        elif file_path.endswith('.csv'):
+            df = pd.read_csv(file_path)
+        else:
+            raise ValueError("Unsupported file format. Use .sav or .csv")
+            
         print(f"Data loaded successfully. Shape: {df.shape}")
         return df
+        
     except Exception as e:
         print(f"Error loading data: {e}")
         raise
 
-def select_variables(df):
-    """
-    Select only the variables needed for the final analyses.
+def remove_outliers(df, variables, threshold=3):
+    """Remove outliers based on z-score threshold"""
+    print(f"Removing outliers (threshold: {threshold} SD)...")
     
-    Parameters:
-    df (pd.DataFrame): Full dataset
-    
-    Returns:
-    pd.DataFrame: Dataset with selected variables only
-    """
-    # Core variables to keep
-    keep_vars = ['Persoon_ID', 'Leeftijd', 'Geslacht']
-    
-    # Add questionnaire variables
-    keep_vars.extend(['IAS_Totaal', 'IATS_Totaal', 'BPQ_Totaal', 
-                     'ICQ_Totaal', 'BDI_Totaal', 'TAS_Totaal'])
-    
-    # Add individual IAS and IATS items
-    ias_items = [f'IAS_{i}' for i in range(1, 22)]
-    iats_items = [f'IATS_{i}' for i in range(1, 22)]
-    keep_vars.extend(ias_items + iats_items)
-    
-    # Select only existing columns
-    available_vars = [var for var in keep_vars if var in df.columns]
-    df_selected = df[available_vars].copy()
-    
-    print(f"Selected {len(available_vars)} variables for analysis")
-    return df_selected
-
-def remove_outliers(df, threshold=3):
-    """
-    Remove outliers based on z-score threshold.
-    
-    Parameters:
-    df (pd.DataFrame): Input dataset
-    threshold (float): Z-score threshold for outlier removal
-    
-    Returns:
-    pd.DataFrame: Dataset without outliers
-    """
-    # Variables to check for outliers
-    outlier_vars = ['IAS_Totaal', 'IATS_Totaal', 'BPQ_Totaal',
-                    'ICQ_Totaal', 'BDI_Totaal', 'TAS_Totaal']
-    
-    # Calculate z-scores
-    z_scores = np.abs(scipystats.zscore(df[outlier_vars]))
-    
-    # Remove outliers
-    df_clean = df[(z_scores < threshold).all(axis=1)].copy()
+    z_scores = np.abs(scipystats.zscore(df[variables]))
+    df_clean = df[(z_scores < threshold).all(axis=1)]
     
     n_removed = len(df) - len(df_clean)
-    print(f"Removed {n_removed} outliers (z-score > {threshold})")
+    print(f"Removed {n_removed} outliers ({n_removed/len(df)*100:.1f}%)")
     print(f"Final sample size: {len(df_clean)}")
     
     return df_clean
 
-def describe_sample(df):
-    """
-    Generate descriptive statistics for the sample.
+#%% Descriptive Statistics
+def calculate_descriptives(df):
+    """Calculate and display descriptive statistics"""
+    print("\n" + "="*50)
+    print("DESCRIPTIVE STATISTICS")
+    print("="*50)
     
-    Parameters:
-    df (pd.DataFrame): Clean dataset
+    # Continuous variables
+    cont_vars = ['Leeftijd', 'IAS_Totaal', 'IATS_Totaal', 'BPQ_Totaal', 
+                 'ICQ_Totaal', 'BDI_Totaal', 'TAS_Totaal']
     
-    Returns:
-    dict: Dictionary containing descriptive statistics
-    """
-    descriptives = {}
+    print("\nContinuous Variables:")
+    desc_stats = df[cont_vars].describe()
+    print(desc_stats.round(2))
     
-    # Sample size
-    descriptives['n_total'] = len(df)
+    # Age and gender breakdown
+    print(f"\nMean age: {df['Leeftijd'].mean():.1f} ± {df['Leeftijd'].std():.1f}")
     
-    # Age statistics
-    descriptives['age_mean'] = df['Leeftijd'].mean()
-    descriptives['age_std'] = df['Leeftijd'].std()
-    descriptives['age_range'] = (df['Leeftijd'].min(), df['Leeftijd'].max())
+    if 'Geslacht' in df.columns:
+        gender_counts = df['Geslacht'].value_counts()
+        gender_pct = (gender_counts / len(df) * 100).round(1)
+        print("Gender distribution:")
+        for gender, count in gender_counts.items():
+            print(f"  {gender}: {count} ({gender_pct[gender]}%)")
     
-    # Sex distribution
-    sex_counts = df['Geslacht'].value_counts()
-    descriptives['sex_distribution'] = sex_counts
-    descriptives['percent_female'] = (sex_counts.get(1, 0) / len(df)) * 100
-    
-    # Questionnaire scores
-    questionnaire_vars = ['IAS_Totaal', 'IATS_Totaal', 'BPQ_Totaal',
-                         'ICQ_Totaal', 'BDI_Totaal', 'TAS_Totaal']
-    descriptives['questionnaire_stats'] = df[questionnaire_vars].describe()
-    
-    print("=== SAMPLE CHARACTERISTICS ===")
-    print(f"Total N: {descriptives['n_total']}")
-    print(f"Age: M = {descriptives['age_mean']:.1f}, SD = {descriptives['age_std']:.1f}")
-    print(f"Age range: {descriptives['age_range'][0]:.0f}-{descriptives['age_range'][1]:.0f}")
-    print(f"Female: {descriptives['percent_female']:.1f}%")
-    print("\nQuestionnaire Descriptives:")
-    print(descriptives['questionnaire_stats'])
-    
-    return descriptives
+    return desc_stats
 
-def perform_pca(df, item_columns, scale_name):
-    """
-    Perform Principal Component Analysis with varimax rotation.
+#%% Principal Component Analysis
+def perform_pca(df, columns, scale_name, n_components_range=[1,2,3,4]):
+    """Perform PCA with rotation and return results for multiple factor solutions"""
+    print(f"\n" + "="*50)
+    print(f"PCA ANALYSIS - {scale_name}")
+    print("="*50)
     
-    Parameters:
-    df (pd.DataFrame): Dataset
-    item_columns (list): List of item column names
-    scale_name (str): Name of the scale (for reporting)
+    data = df[columns].dropna()
     
-    Returns:
-    dict: PCA results including components, eigenvalues, and fit indices
-    """
-    print(f"\n=== PCA FOR {scale_name.upper()} ===")
-    
-    # Prepare data
-    data = df[item_columns].dropna()
+    # Standardize data
     scaler = StandardScaler()
     data_scaled = scaler.fit_transform(data)
     
-    # KMO and Bartlett's test
+    # Test assumptions
     kmo_all, kmo_model = calculate_kmo(data_scaled)
     bartlett_chi2, bartlett_p = calculate_bartlett_sphericity(data_scaled)
     
-    print(f"KMO: {kmo_model:.3f}")
-    print(f"Bartlett's test: χ² = {bartlett_chi2:.2f}, p < .001" if bartlett_p < 0.001 
-          else f"Bartlett's test: χ² = {bartlett_chi2:.2f}, p = {bartlett_p:.3f}")
+    print(f"Sample adequacy:")
+    print(f"  KMO: {kmo_model:.3f}")
+    print(f"  Bartlett's test: χ² = {bartlett_chi2:.2f}, p < {bartlett_p:.3f}")
     
-    # Perform PCA
+    # Fit PCA
     pca = PCA()
     pca.fit(data_scaled)
     
-    # Extract eigenvalues and variance explained
     eigenvalues = pca.explained_variance_
-    variance_explained = pca.explained_variance_ratio_
-    cumulative_variance = np.cumsum(variance_explained)
+    explained_var = pca.explained_variance_ratio_
+    cumulative_var = np.cumsum(explained_var)
     
     # Kaiser criterion
-    n_components_kaiser = np.sum(eigenvalues > 1)
-    print(f"Components with eigenvalue > 1: {n_components_kaiser}")
+    n_kaiser = np.sum(eigenvalues > 1)
+    print(f"\nEigenvalues > 1 (Kaiser criterion): {n_kaiser}")
+    print(f"Variance explained by {n_kaiser} components: {cumulative_var[n_kaiser-1]:.3f}")
     
-    # Get component loadings with varimax rotation
-    loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
+    # Create scree plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, len(eigenvalues) + 1), eigenvalues, 'o-', linewidth=2)
+    plt.axhline(y=1, color='r', linestyle='--', alpha=0.7)
+    plt.xlabel('Component Number')
+    plt.ylabel('Eigenvalue')
+    plt.title(f'Scree Plot - {scale_name}')
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
     
-    # Apply varimax rotation
-    rotator = Rotator(method='varimax')
-    loadings_rotated = rotator.fit_transform(loadings)
+    # Create output directory if it doesn't exist
+    import os
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+    plt.savefig(f'{OUTPUT_PATH}{scale_name.lower()}_scree_plot.png', dpi=300, bbox_inches='tight')
+    plt.show()
     
-    # Create results dataframe
-    component_df = pd.DataFrame(
-        loadings_rotated,
-        index=item_columns,
-        columns=[f'PC{i+1}' for i in range(len(item_columns))]
-    )
+    # Store results for different factor solutions
+    pca_results = {}
     
-    # Calculate communalities
-    communalities = np.sum(loadings_rotated**2, axis=1)
+    for n_factors in n_components_range:
+        if n_factors <= len(columns):
+            # Get loadings
+            loadings = pca.components_[:n_factors].T * np.sqrt(eigenvalues[:n_factors])
+            
+            # Apply varimax rotation (with error handling)
+            try:
+                rotator = Rotator(method='varimax')
+                loadings_rotated = rotator.fit_transform(loadings)
+                rotation_applied = True
+            except Exception as e:
+                print(f"    Warning: Rotation failed ({e}), using unrotated loadings")
+                loadings_rotated = loadings
+                rotation_applied = False
+            
+            # Create loadings DataFrame
+            factor_names = [f'Factor_{i+1}' for i in range(n_factors)]
+            loadings_df = pd.DataFrame(
+                loadings_rotated, 
+                index=columns, 
+                columns=factor_names
+            )
+            
+            pca_results[f'{n_factors}_factor'] = {
+                'loadings': loadings_df,
+                'components': pca.components_[:n_factors],  # Store raw components for CFA
+                'explained_variance': explained_var[:n_factors].sum(),
+                'eigenvalues': eigenvalues[:n_factors]
+            }
+            
+            print(f"\n{n_factors}-Factor Solution:")
+            print(f"  Variance explained: {explained_var[:n_factors].sum():.3f}")
+            if rotation_applied:
+                print("  Rotated factor loadings (|loading| > 0.3):")
+            else:
+                print("  Unrotated factor loadings (|loading| > 0.3):")
+            for factor in factor_names:
+                items = loadings_df[np.abs(loadings_df[factor]) > 0.3].index.tolist()
+                if items:
+                    print(f"    {factor}: {', '.join(items)}")
+                else:
+                    print(f"    {factor}: No items with |loading| > 0.3")
     
-    results = {
-        'eigenvalues': eigenvalues,
-        'variance_explained': variance_explained,
-        'cumulative_variance': cumulative_variance,
-        'n_components_kaiser': n_components_kaiser,
-        'components': component_df,
-        'communalities': communalities,
-        'kmo': kmo_model,
-        'bartlett_chi2': bartlett_chi2,
-        'bartlett_p': bartlett_p
-    }
-    
-    # Print key results
-    print("Eigenvalues (first 5):", eigenvalues[:5].round(3))
-    print("Variance explained (first 5):", variance_explained[:5].round(3))
-    
-    return results
+    return pca_results
 
-def calculate_reliability(df, item_columns, factor_structure=None):
-    """
-    Calculate Cronbach's alpha reliability coefficients.
+#%% Internal Consistency Analysis
+def calculate_cronbach_alpha(df):
+    """Calculate Cronbach's alpha"""
+    n_items = df.shape[1]
+    total_variance = df.sum(axis=1).var(ddof=1)
+    item_variances = df.var(axis=0, ddof=1).sum()
+    alpha = (n_items / (n_items - 1)) * (1 - (item_variances / total_variance))
+    return alpha
+
+def analyze_internal_consistency(df, columns, scale_name, pca_results):
+    """Analyze internal consistency for different factor structures"""
+    print(f"\n" + "="*50)
+    print(f"INTERNAL CONSISTENCY - {scale_name}")
+    print("="*50)
     
-    Parameters:
-    df (pd.DataFrame): Dataset
-    item_columns (list): List of item column names
-    factor_structure (dict, optional): Factor structure for subscale analysis
+    data = df[columns].dropna()
     
-    Returns:
-    dict: Reliability results
-    """
-    def cronbach_alpha(data):
-        """Calculate Cronbach's alpha"""
-        n_items = data.shape[1]
-        total_var = data.sum(axis=1).var(ddof=1)
-        item_vars = data.var(axis=0, ddof=1).sum()
-        alpha = (n_items / (n_items - 1)) * (1 - (item_vars / total_var))
-        return alpha
+    # Overall alpha
+    overall_alpha = calculate_cronbach_alpha(data)
+    print(f"Overall Cronbach's α: {overall_alpha:.3f}")
     
-    results = {}
+    # Alpha for each factor structure
+    consistency_results = {'overall': overall_alpha}
     
-    # Overall reliability
-    data = df[item_columns].dropna()
-    results['overall_alpha'] = cronbach_alpha(data)
-    
-    # Item-total correlations and alpha if item deleted
-    item_analysis = {}
-    for item in item_columns:
-        # Alpha if item deleted
-        data_without_item = data.drop(columns=[item])
-        alpha_without = cronbach_alpha(data_without_item)
+    for structure_name, structure_data in pca_results.items():
+        loadings_df = structure_data['loadings']
+        n_factors = loadings_df.shape[1]
         
-        # Item-total correlation
-        item_total_corr = data[item].corr(data.drop(columns=[item]).sum(axis=1))
-        
-        item_analysis[item] = {
-            'alpha_if_deleted': alpha_without,
-            'item_total_correlation': item_total_corr
-        }
-    
-    results['item_analysis'] = item_analysis
-    
-    # Factor-based reliabilities if structure provided
-    if factor_structure:
+        print(f"\n{structure_name.replace('_', '-').title()} Structure:")
         factor_alphas = {}
-        for factor_name, factor_items in factor_structure.items():
-            if len(factor_items) > 1:  # Need at least 2 items for reliability
-                factor_data = data[[col for col in item_columns if any(str(i) in col for i in factor_items)]]
-                if not factor_data.empty:
-                    factor_alphas[factor_name] = cronbach_alpha(factor_data)
-        results['factor_alphas'] = factor_alphas
+        
+        for factor_col in loadings_df.columns:
+            # Assign items to factors based on highest absolute loading
+            factor_items = []
+            for item in loadings_df.index:
+                max_loading_factor = loadings_df.loc[item].abs().idxmax()
+                if max_loading_factor == factor_col and abs(loadings_df.loc[item, factor_col]) > 0.3:
+                    factor_items.append(item)
+            
+            if len(factor_items) > 1:  # Need at least 2 items for alpha
+                factor_alpha = calculate_cronbach_alpha(data[factor_items])
+                factor_alphas[factor_col] = factor_alpha
+                print(f"  {factor_col}: α = {factor_alpha:.3f} ({len(factor_items)} items)")
+            else:
+                print(f"  {factor_col}: insufficient items ({len(factor_items)})")
+        
+        consistency_results[structure_name] = factor_alphas
     
-    return results
+    return consistency_results
 
-def create_cfa_model_specification(pca_results, n_factors, prefix):
-    """
-    Create CFA model specification based on PCA results.
+#%% Confirmatory Factor Analysis
+def create_model_spec_from_pca(pca_components, num_factors):
+    """Generate model specification dictionary based on PCA components and number of factors."""
+    model_spec = {f'F{i+1}': [] for i in range(num_factors)}
     
-    Parameters:
-    pca_results (dict): Results from PCA
-    n_factors (int): Number of factors
-    prefix (str): Variable prefix (e.g., 'IAS_', 'IATS_')
-    
-    Returns:
-    str: Model specification for semopy
-    """
-    components = pca_results['components']
-    n_items = len(components)
-    
-    # Get the loadings for the specified number of factors
-    loadings = components.iloc[:, :n_factors].abs()
-    
-    # Create factor assignments
-    factor_assignments = {}
-    for factor in range(n_factors):
-        factor_assignments[f'F{factor + 1}'] = []
-    
-    # Assign each item to the factor with the highest loading
-    for item_idx in range(n_items):
-        # Get loadings for this item across all factors
-        item_loadings = loadings.iloc[item_idx, :].values
+    for idx, column in enumerate(range(pca_components.shape[1])):
+        # Get the absolute values of the loadings for this item across all factors
+        loadings = [np.abs(pca_components[factor, idx]) for factor in range(num_factors)]
         
-        # Find the factor with the highest loading
-        best_factor_idx = np.argmax(item_loadings)
-        
-        # Assign item to that factor
-        factor_name = f'F{best_factor_idx + 1}'
-        item_name = f"{prefix}{item_idx + 1}"
-        factor_assignments[factor_name].append(item_name)
+        # Assign to the factor with the highest absolute loading
+        best_factor = np.argmax(loadings)
+        model_spec[f'F{best_factor+1}'].append(idx + 1)
     
-    # Build model specification string
-    model_spec_parts = []
-    for factor_name, items in factor_assignments.items():
-        if len(items) > 0:  # Only include factors with items
-            model_spec_parts.append(f"{factor_name} =~ " + " + ".join(items))
-    
-    model_spec = "\n".join(model_spec_parts)
     return model_spec
 
-def run_cfa_models(df, item_columns, pca_results, prefix, scale_name):
-    """
-    Run Confirmatory Factor Analysis for 1-4 factor models.
+def create_model_spec(model_spec, prefix=""):
+    model_desc = ""
+    for factor, items in model_spec.items():
+        model_desc += f"{prefix}{factor} =~ " + " + ".join([f"{prefix}{item}" for item in items]) + "\n"
+    return model_desc
+
+def calculate_fit_statistics(model, data):
+    model.fit(data)
+    dof = stats.calc_dof(model)
+    chi_square = stats.calc_chi2(model)
+    cfi = stats.calc_cfi(model)
+    tli = stats.calc_tli(model)
+    rmsea = stats.calc_rmsea(model)
     
-    Parameters:
-    df (pd.DataFrame): Dataset
-    item_columns (list): List of item column names
-    pca_results (dict): Results from PCA
-    prefix (str): Variable prefix
-    scale_name (str): Scale name for reporting
+    return chi_square, cfi, tli, rmsea, dof
+
+def extract_factor_loadings(model):
+    """Extract and return the factor loadings from a fitted model."""
+    params = model.inspect()
+    loadings = params[params['op'] == '~']
+    return loadings[['lval', 'rval', 'Estimate']]
+
+def run_cfa_analysis(df, columns, scale_name, pca_results):
+    """Run CFA for different factor structures"""
+    print(f"\n" + "="*50)
+    print(f"CONFIRMATORY FACTOR ANALYSIS - {scale_name}")
+    print("="*50)
     
-    Returns:
-    dict: CFA results for different factor models
-    """
-    print(f"\n=== CFA FOR {scale_name.upper()} ===")
+    data = df[columns].dropna()
     
     # Split data for cross-validation
-    df_train, df_test = train_test_split(df, test_size=0.5, random_state=42)
+    train_data, test_data = train_test_split(data, test_size=0.5, random_state=RANDOM_STATE)
+    print(f"Training sample: n = {len(train_data)}")
+    print(f"Test sample: n = {len(test_data)}")
     
-    results = {}
+    cfa_results = {}
     
-    for n_factors in [1, 2, 3, 4]:
+    for structure_name, structure_data in pca_results.items():
+        print(f"\n{structure_name.replace('_', '-').title()} Model:")
+        
         try:
-            # Create model specification
-            model_spec = create_cfa_model_specification(pca_results, n_factors, prefix)
+            # Extract number of factors from structure name
+            num_factors = int(structure_name.split('_')[0])
             
-            if not model_spec:  # Skip if no valid model
-                continue
-                
+            # Create model specification using raw PCA components
+            model_spec = create_model_spec_from_pca(structure_data['components'], num_factors)
+            model_desc = create_model_spec(model_spec, scale_name + "_")
+            print("Model specification:")
+            print(model_desc)
+            
             # Fit model
-            model = Model(model_spec)
-            model.fit(df_train[item_columns])
+            model = Model(model_desc)
             
-            # Calculate fit statistics
-            chi2 = stats.calc_chi2(model)
-            dof = stats.calc_dof(model)
-            cfi = stats.calc_cfi(model)
-            tli = stats.calc_tli(model)
-            rmsea = stats.calc_rmsea(model)
+            # Calculate fit indices
+            fit_stats = calculate_fit_statistics(model, train_data)
+            loadings = extract_factor_loadings(model)
             
-            # Get factor loadings
-            params = model.inspect()
-            loadings = params[params['op'] == '=~'][['lval', 'rval', 'Estimate']]
+            fit_stats_dict = {
+                'Chi-square': fit_stats[0],
+                'df': fit_stats[4],
+                'p-value': 1 - scipystats.chi2.cdf(fit_stats[0], fit_stats[4]) if fit_stats[4] > 0 else np.nan,
+                'CFI': fit_stats[1],
+                'TLI': fit_stats[2],
+                'RMSEA': fit_stats[3]
+            }
             
-            # Calculate p-value safely
-            if dof > 0 and not np.isnan(chi2):
-                p_value = 1 - scipystats.chi2.cdf(chi2, dof)
+            print("Fit indices:")
+            for stat, value in fit_stats_dict.items():
+                if isinstance(value, float):
+                    print(f"  {stat}: {value:.3f}")
+                else:
+                    print(f"  {stat}: {value}")
+            
+            # Evaluate fit
+            good_fit = (fit_stats[1] > 0.95 and fit_stats[2] > 0.95 and fit_stats[3] < 0.06)
+            acceptable_fit = (fit_stats[1] > 0.90 and fit_stats[2] > 0.90 and fit_stats[3] < 0.08)
+            
+            if good_fit:
+                print("  → Good model fit")
+            elif acceptable_fit:
+                print("  → Acceptable model fit")
             else:
-                p_value = np.nan
+                print("  → Poor model fit")
             
-            results[f'{n_factors}_factor'] = {
-                'model_spec': model_spec,
-                'fit_indices': {
-                    'chi2': chi2,
-                    'dof': dof,
-                    'p_value': p_value,
-                    'cfi': cfi,
-                    'tli': tli,
-                    'rmsea': rmsea
-                },
+            cfa_results[structure_name] = {
+                'model': model,
+                'fit_stats': fit_stats,
+                'fit_stats_dict': fit_stats_dict,
+                'model_spec': model_desc,
                 'loadings': loadings
             }
             
-            print(f"\n{n_factors}-Factor Model:")
-            if not np.isnan(p_value):
-                print(f"  χ²({dof}) = {chi2:.2f}, p = {p_value:.3f}")
-            else:
-                print(f"  χ²({dof}) = {chi2:.2f}, p = NaN")
-            print(f"  CFI = {cfi:.3f}, TLI = {tli:.3f}, RMSEA = {rmsea:.3f}")
-            
         except Exception as e:
-            print(f"Error fitting {n_factors}-factor model: {e}")
-            continue
+            print(f"  Error fitting model: {e}")
+            cfa_results[structure_name] = None
     
-    return results
+    return cfa_results
 
+#%% Regression Analysis
 def run_regression_analyses(df):
-    """
-    Run regression analyses examining relationships between scales.
-    
-    Parameters:
-    df (pd.DataFrame): Dataset
-    
-    Returns:
-    dict: Regression results
-    """
-    print("\n=== REGRESSION ANALYSES ===")
+    """Run univariate regression analyses"""
+    print(f"\n" + "="*50)
+    print("REGRESSION ANALYSES")
+    print("="*50)
     
     dependent_vars = ['IAS_Totaal', 'IATS_Totaal']
     independent_vars = ['ICQ_Totaal', 'BPQ_Totaal', 'BDI_Totaal', 'TAS_Totaal']
     
-    results = {}
+    regression_results = []
     
     for dep_var in dependent_vars:
-        results[dep_var] = {}
-        
         print(f"\nDependent Variable: {dep_var}")
         print("-" * 40)
         
         for ind_var in independent_vars:
-            # Simple regression
-            X = sm.add_constant(df[ind_var])
-            y = df[dep_var]
+            # Prepare data
+            data_subset = df[[dep_var, ind_var]].dropna()
+            X = sm.add_constant(data_subset[ind_var])
+            y = data_subset[dep_var]
+            
+            # Fit model
             model = sm.OLS(y, X).fit()
             
-            results[dep_var][ind_var] = {
-                'coefficient': model.params[ind_var],
-                'std_error': model.bse[ind_var],
-                't_value': model.tvalues[ind_var],
-                'p_value': model.pvalues[ind_var],
-                'r_squared': model.rsquared,
-                'confidence_interval': model.conf_int().loc[ind_var].tolist()
-            }
+            # Extract results
+            coef = model.params[ind_var]
+            se = model.bse[ind_var]
+            t_stat = model.tvalues[ind_var]
+            p_value = model.pvalues[ind_var]
+            r_squared = model.rsquared
             
-            print(f"{ind_var}: β = {model.params[ind_var]:.3f}, "
-                  f"t = {model.tvalues[ind_var]:.3f}, "
-                  f"p = {model.pvalues[ind_var]:.3f}, "
-                  f"R² = {model.rsquared:.3f}")
+            print(f"{ind_var}: β = {coef:.3f}, SE = {se:.3f}, t = {t_stat:.3f}, "
+                  f"p = {p_value:.3f}, R² = {r_squared:.3f}")
+            
+            regression_results.append({
+                'Dependent': dep_var,
+                'Independent': ind_var,
+                'Beta': coef,
+                'SE': se,
+                't': t_stat,
+                'p': p_value,
+                'R_squared': r_squared
+            })
     
-    return results
+    return pd.DataFrame(regression_results)
 
-def save_results(results_dict, output_path):
-    """
-    Save all analysis results to Excel file.
-    
-    Parameters:
-    results_dict (dict): Dictionary containing all analysis results
-    output_path (str): Path for output Excel file
-    """
-    with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
-        
-        # 1. Descriptive statistics
-        if 'descriptives' in results_dict:
-            desc_data = []
-            desc = results_dict['descriptives']
-            
-            desc_data.append({'Measure': 'Sample Size', 'Value': desc['n_total']})
-            desc_data.append({'Measure': 'Mean Age', 'Value': f"{desc['age_mean']:.1f}"})
-            desc_data.append({'Measure': 'Age SD', 'Value': f"{desc['age_std']:.1f}"})
-            desc_data.append({'Measure': 'Age Range', 'Value': f"{desc['age_range'][0]:.0f}-{desc['age_range'][1]:.0f}"})
-            desc_data.append({'Measure': 'Percent Female', 'Value': f"{desc['percent_female']:.1f}%"})
-            
-            desc_df = pd.DataFrame(desc_data)
-            desc_df.to_excel(writer, sheet_name='Descriptives', index=False)
-            
-            # Questionnaire descriptives
-            if 'questionnaire_stats' in desc:
-                desc['questionnaire_stats'].to_excel(writer, sheet_name='Questionnaire_Stats', index=True)
-        
-        # 2. IAS PCA Results
-        if 'ias_pca' in results_dict:
-            ias_pca = results_dict['ias_pca']
-            
-            # Eigenvalues and variance explained
-            pca_summary = pd.DataFrame({
-                'Component': [f'PC{i+1}' for i in range(len(ias_pca['eigenvalues']))],
-                'Eigenvalue': ias_pca['eigenvalues'],
-                'Variance_Explained': ias_pca['variance_explained'],
-                'Cumulative_Variance': ias_pca['cumulative_variance']
-            })
-            pca_summary.to_excel(writer, sheet_name='IAS_PCA_Summary', index=False)
-            
-            # Component loadings
-            ias_pca['components'].to_excel(writer, sheet_name='IAS_PCA_Loadings', index=True)
-            
-            # Communalities
-            comm_df = pd.DataFrame({
-                'Item': ias_pca['components'].index,
-                'Communality': ias_pca['communalities']
-            })
-            comm_df.to_excel(writer, sheet_name='IAS_Communalities', index=False)
-            
-            # Fit indices
-            fit_df = pd.DataFrame([{
-                'KMO': ias_pca['kmo'],
-                'Bartlett_Chi2': ias_pca['bartlett_chi2'],
-                'Bartlett_p': ias_pca['bartlett_p'],
-                'Kaiser_Components': ias_pca['n_components_kaiser']
-            }])
-            fit_df.to_excel(writer, sheet_name='IAS_PCA_Fit', index=False)
-        
-        # 3. IATS PCA Results
-        if 'iats_pca' in results_dict:
-            iats_pca = results_dict['iats_pca']
-            
-            # Eigenvalues and variance explained
-            pca_summary = pd.DataFrame({
-                'Component': [f'PC{i+1}' for i in range(len(iats_pca['eigenvalues']))],
-                'Eigenvalue': iats_pca['eigenvalues'],
-                'Variance_Explained': iats_pca['variance_explained'],
-                'Cumulative_Variance': iats_pca['cumulative_variance']
-            })
-            pca_summary.to_excel(writer, sheet_name='IATS_PCA_Summary', index=False)
-            
-            # Component loadings
-            iats_pca['components'].to_excel(writer, sheet_name='IATS_PCA_Loadings', index=True)
-            
-            # Communalities
-            comm_df = pd.DataFrame({
-                'Item': iats_pca['components'].index,
-                'Communality': iats_pca['communalities']
-            })
-            comm_df.to_excel(writer, sheet_name='IATS_Communalities', index=False)
-            
-            # Fit indices
-            fit_df = pd.DataFrame([{
-                'KMO': iats_pca['kmo'],
-                'Bartlett_Chi2': iats_pca['bartlett_chi2'],
-                'Bartlett_p': iats_pca['bartlett_p'],
-                'Kaiser_Components': iats_pca['n_components_kaiser']
-            }])
-            fit_df.to_excel(writer, sheet_name='IATS_PCA_Fit', index=False)
-        
-        # 4. IAS Reliability Results
-        if 'ias_reliability' in results_dict:
-            ias_rel = results_dict['ias_reliability']
-            
-            # Overall alpha
-            alpha_df = pd.DataFrame([{
-                'Scale': 'IAS',
-                'Overall_Alpha': ias_rel['overall_alpha']
-            }])
-            alpha_df.to_excel(writer, sheet_name='IAS_Reliability', index=False, startrow=0)
-            
-            # Item analysis
-            item_data = []
-            for item, stats in ias_rel['item_analysis'].items():
-                item_data.append({
-                    'Item': item,
-                    'Alpha_if_Deleted': stats['alpha_if_deleted'],
-                    'Item_Total_Correlation': stats['item_total_correlation']
-                })
-            item_df = pd.DataFrame(item_data)
-            item_df.to_excel(writer, sheet_name='IAS_Item_Analysis', index=False)
-            
-            # Factor alphas if available
-            if 'factor_alphas' in ias_rel:
-                factor_data = []
-                for factor, alpha in ias_rel['factor_alphas'].items():
-                    factor_data.append({'Factor': factor, 'Alpha': alpha})
-                factor_df = pd.DataFrame(factor_data)
-                factor_df.to_excel(writer, sheet_name='IAS_Factor_Alphas', index=False)
-        
-        # 5. IATS Reliability Results
-        if 'iats_reliability' in results_dict:
-            iats_rel = results_dict['iats_reliability']
-            
-            # Overall alpha
-            alpha_df = pd.DataFrame([{
-                'Scale': 'IATS',
-                'Overall_Alpha': iats_rel['overall_alpha']
-            }])
-            alpha_df.to_excel(writer, sheet_name='IATS_Reliability', index=False, startrow=0)
-            
-            # Item analysis
-            item_data = []
-            for item, stats in iats_rel['item_analysis'].items():
-                item_data.append({
-                    'Item': item,
-                    'Alpha_if_Deleted': stats['alpha_if_deleted'],
-                    'Item_Total_Correlation': stats['item_total_correlation']
-                })
-            item_df = pd.DataFrame(item_data)
-            item_df.to_excel(writer, sheet_name='IATS_Item_Analysis', index=False)
-            
-            # Factor alphas if available
-            if 'factor_alphas' in iats_rel:
-                factor_data = []
-                for factor, alpha in iats_rel['factor_alphas'].items():
-                    factor_data.append({'Factor': factor, 'Alpha': alpha})
-                factor_df = pd.DataFrame(factor_data)
-                factor_df.to_excel(writer, sheet_name='IATS_Factor_Alphas', index=False)
-        
-        # 6. IAS CFA Results
-        if 'ias_cfa' in results_dict:
-            ias_cfa = results_dict['ias_cfa']
-            
-            # Fit indices summary
-            fit_data = []
-            for model_name, results in ias_cfa.items():
-                fit_indices = results['fit_indices']
-                fit_data.append({
-                    'Model': model_name,
-                    'Chi2': fit_indices['chi2'],
-                    'df': fit_indices['dof'],
-                    'p_value': fit_indices['p_value'],
-                    'CFI': fit_indices['cfi'],
-                    'TLI': fit_indices['tli'],
-                    'RMSEA': fit_indices['rmsea']
-                })
-            fit_summary_df = pd.DataFrame(fit_data)
-            fit_summary_df.to_excel(writer, sheet_name='IAS_CFA_Fit_Indices', index=False)
-            
-            # Individual model loadings
-            for model_name, results in ias_cfa.items():
-                if 'loadings' in results and not results['loadings'].empty:
-                    sheet_name = f'IAS_CFA_{model_name}_Loadings'
-                    # Truncate sheet name if too long
-                    if len(sheet_name) > 31:
-                        sheet_name = f'IAS_{model_name}_Load'
-                    results['loadings'].to_excel(writer, sheet_name=sheet_name, index=False)
-        
-        # 7. IATS CFA Results
-        if 'iats_cfa' in results_dict:
-            iats_cfa = results_dict['iats_cfa']
-            
-            # Fit indices summary
-            fit_data = []
-            for model_name, results in iats_cfa.items():
-                fit_indices = results['fit_indices']
-                fit_data.append({
-                    'Model': model_name,
-                    'Chi2': fit_indices['chi2'],
-                    'df': fit_indices['dof'],
-                    'p_value': fit_indices['p_value'],
-                    'CFI': fit_indices['cfi'],
-                    'TLI': fit_indices['tli'],
-                    'RMSEA': fit_indices['rmsea']
-                })
-            fit_summary_df = pd.DataFrame(fit_data)
-            fit_summary_df.to_excel(writer, sheet_name='IATS_CFA_Fit_Indices', index=False)
-            
-            # Individual model loadings
-            for model_name, results in iats_cfa.items():
-                if 'loadings' in results and not results['loadings'].empty:
-                    sheet_name = f'IATS_CFA_{model_name}_Loadings'
-                    # Truncate sheet name if too long
-                    if len(sheet_name) > 31:
-                        sheet_name = f'IATS_{model_name}_Load'
-                    results['loadings'].to_excel(writer, sheet_name=sheet_name, index=False)
-        
-        # 8. Regression Results
-        if 'regression' in results_dict:
-            regression = results_dict['regression']
-            
-            # Compile all regression results into one table
-            reg_data = []
-            for dep_var, predictors in regression.items():
-                for ind_var, stats in predictors.items():
-                    reg_data.append({
-                        'Dependent_Variable': dep_var,
-                        'Independent_Variable': ind_var,
-                        'Coefficient': stats['coefficient'],
-                        'Std_Error': stats['std_error'],
-                        't_value': stats['t_value'],
-                        'p_value': stats['p_value'],
-                        'R_squared': stats['r_squared'],
-                        'CI_Lower': stats['confidence_interval'][0],
-                        'CI_Upper': stats['confidence_interval'][1]
-                    })
-            
-            reg_df = pd.DataFrame(reg_data)
-            reg_df.to_excel(writer, sheet_name='Regression_Results', index=False)
-            
-            # Separate sheets for each dependent variable
-            for dep_var in regression.keys():
-                dep_data = [row for row in reg_data if row['Dependent_Variable'] == dep_var]
-                dep_df = pd.DataFrame(dep_data)
-                sheet_name = f'Regression_{dep_var}'
-                if len(sheet_name) > 31:
-                    sheet_name = f'Reg_{dep_var}'
-                dep_df.to_excel(writer, sheet_name=sheet_name, index=False)
-    
-    print(f"Results saved to: {output_path}")
-    print("\nExcel sheets created:")
-    print("- Descriptives: Sample characteristics")
-    print("- Questionnaire_Stats: Descriptive statistics for scales")
-    print("- IAS_PCA_*: Principal component analysis results for IAS")
-    print("- IATS_PCA_*: Principal component analysis results for IATS")
-    print("- IAS_Reliability, IAS_Item_Analysis: Internal consistency for IAS")
-    print("- IATS_Reliability, IATS_Item_Analysis: Internal consistency for IATS")
-    print("- IAS_CFA_*, IATS_CFA_*: Confirmatory factor analysis results")
-    print("- Regression_*: Regression analysis results")
-
+#%% Main Analysis Pipeline
 def main():
-    """
-    Main analysis function.
-    """
-    print("=== DUTCH INTEROCEPTIVE SCALES VALIDATION ===")
-    print("Starting psychometric validation analyses...\n")
+    """Main analysis pipeline"""
+    print("DUTCH INTEROCEPTIVE SCALES VALIDATION ANALYSIS")
+    print("=" * 60)
     
-    # Configuration
-    DATA_PATH = "data/Part1_19082024_clean_JM_version2.sav"  # Update this path
-    OUTPUT_PATH = "output/validation_results.xlsx"
+    # Load and prepare data
+    df = load_and_prepare_data(DATA_PATH)
     
-    try:
-        # 1. Load and prepare data
-        df = load_data(DATA_PATH)
-        df = select_variables(df)
-        df = remove_outliers(df)
-        
-        # 2. Descriptive statistics
-        descriptives = describe_sample(df)
-        
-        # Define item columns
-        ias_items = [f'IAS_{i}' for i in range(1, 22)]
-        iats_items = [f'IATS_{i}' for i in range(1, 22)]
-        
-        # 3. Principal Component Analysis
-        ias_pca = perform_pca(df, ias_items, "IAS")
-        iats_pca = perform_pca(df, iats_items, "IATS")
-        
-        # 4. Internal consistency
-        print("\n=== RELIABILITY ANALYSES ===")
-        ias_reliability = calculate_reliability(df, ias_items)
-        iats_reliability = calculate_reliability(df, iats_items)
-        
-        print(f"IAS Overall α = {ias_reliability['overall_alpha']:.3f}")
-        print(f"IATS Overall α = {iats_reliability['overall_alpha']:.3f}")
-        
-        # 5. Confirmatory Factor Analysis
-        ias_cfa = run_cfa_models(df, ias_items, ias_pca, "IAS_", "IAS")
-        iats_cfa = run_cfa_models(df, iats_items, iats_pca, "IATS_", "IATS")
-        
-        # 6. Regression analyses
-        regression_results = run_regression_analyses(df)
-        
-        # 7. Compile and save results
-        all_results = {
-            'descriptives': descriptives,
-            'ias_pca': ias_pca,
-            'iats_pca': iats_pca,
-            'ias_reliability': ias_reliability,
-            'iats_reliability': iats_reliability,
-            'ias_cfa': ias_cfa,
-            'iats_cfa': iats_cfa,
-            'regression': regression_results
-        }
-        
-        save_results(all_results, OUTPUT_PATH)
-        
-        print("\n=== ANALYSIS COMPLETE ===")
-        print("All analyses completed successfully!")
-        
-    except Exception as e:
-        print(f"Analysis failed: {e}")
-        raise
+    # Define key variables
+    outlier_vars = ['IAS_Totaal', 'IATS_Totaal', 'BPQ_Totaal', 
+                    'ICQ_Totaal', 'BDI_Totaal', 'TAS_Totaal']
+    
+    ias_items = [f'IAS_{i}' for i in range(1, 22)]
+    iats_items = [f'IATS_{i}' for i in range(1, 22)]
+    
+    # Remove outliers
+    df_clean = remove_outliers(df, outlier_vars, OUTLIER_THRESHOLD)
+    
+    # Descriptive statistics
+    descriptives = calculate_descriptives(df_clean)
+    
+    # PCA Analysis
+    ias_pca_results = perform_pca(df_clean, ias_items, "IAS")
+    iats_pca_results = perform_pca(df_clean, iats_items, "IATS")
+    
+    # Internal Consistency
+    ias_consistency = analyze_internal_consistency(df_clean, ias_items, "IAS", ias_pca_results)
+    iats_consistency = analyze_internal_consistency(df_clean, iats_items, "IATS", iats_pca_results)
+    
+    # Confirmatory Factor Analysis
+    ias_cfa_results = run_cfa_analysis(df_clean, ias_items, "IAS", ias_pca_results)
+    iats_cfa_results = run_cfa_analysis(df_clean, iats_items, "IATS", iats_pca_results)
+    
+    # Regression Analysis
+    regression_results = run_regression_analyses(df_clean)
+    
+    print(f"\n" + "="*60)
+    print("ANALYSIS COMPLETE")
+    print("="*60)
+    print(f"Results saved to: {OUTPUT_PATH}")
+    print("Check the output folder for generated plots and results.")
+    
+    return {
+        'descriptives': descriptives,
+        'ias_pca': ias_pca_results,
+        'iats_pca': iats_pca_results,
+        'ias_consistency': ias_consistency,
+        'iats_consistency': iats_consistency,
+        'ias_cfa': ias_cfa_results,
+        'iats_cfa': iats_cfa_results,
+        'regression': regression_results
+    }
 
+# Run analysis if script is executed directly
 if __name__ == "__main__":
-    main()
+    results = main()
