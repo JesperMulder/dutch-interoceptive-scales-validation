@@ -1,242 +1,369 @@
-# \# Documentation
+# Documentation
 
-# 
+This directory contains additional documentation, supplementary materials, and methodological details for the Dutch Interoceptive Scales Validation study.
 
-# This folder contains additional documentation for the Dutch Interoceptive Scales Validation project.
+## Contents
 
-# 
+### Methodological Documentation
 
-# \## Documentation Structure
+- **Statistical Methods**: Detailed description of all statistical procedures
+- **Decision Rules**: Rationale for analytical decisions
+- **Validation Procedures**: Steps taken to ensure analysis quality
 
-# 
+### Interpretation Guides
 
-# ```
+- **Factor Analysis Results**: How to interpret EFA and CFA outputs
+- **Fit Indices**: Guidelines for evaluating model fit
+- **Reliability Coefficients**: Interpreting Cronbach's alpha and McDonald's omega
+- **Measurement Invariance**: Understanding invariance testing results
 
-# docs/
+### Supplementary Materials
 
-# ├── README.md              # This file - documentation index
+- **Questionnaires**: Original and translated scale items (if permissible)
+- **Translation Process**: Documentation of translation and back-translation
+- **Pilot Testing**: Results from pilot studies
+- **Sample Characteristics**: Detailed demographic information
 
-# ```
+## Key Methodological Decisions
 
-# 
+### Factor Analysis
 
-# \## Available Documentation
+#### Why Parallel Analysis?
 
-# 
+**Parallel Analysis** (Horn, 1965) is considered the gold standard for determining the number of factors because:
 
-# \### Main Project Documentation
+1. **Reduces over-extraction**: Compared to Kaiser's criterion (eigenvalues >1)
+2. **Empirical comparison**: Compares real data to random data
+3. **Recommended practice**: Widely endorsed in psychometric literature
 
-# \- \*\*\[Main README](../README.md)\*\*: Project overview, quick start guide, and key findings
+**Implementation**:
+- 1,000 random datasets generated
+- 95th percentile of random eigenvalues used as threshold
+- Factors retained when real eigenvalues > random eigenvalues
 
-# \- \*\*\[Data Documentation](../data/README.md)\*\*: Data format requirements and variable descriptions
+#### Why Oblique Rotation?
 
-# \- \*\*\[Output Documentation](../output/README.md)\*\*: Understanding analysis results and output files
+**Oblimin rotation** (oblique) is preferred over orthogonal rotation because:
 
-# 
+1. **Realistic**: Psychological constructs typically correlate
+2. **Flexible**: Allows factors to correlate if data support it
+3. **Informative**: Provides both pattern and structure matrices
+4. **Conservative**: If factors are truly uncorrelated, oblique ≈ orthogonal
 
-# \### Analysis Pipeline
+**Alternative**: Varimax rotation assumes orthogonal (uncorrelated) factors, which is often unrealistic for psychological constructs.
 
-# 
+#### Why Principal Axis Factoring?
 
-# The validation study follows a systematic approach:
+**Principal Axis Factoring** (common factor extraction) is preferred over PCA because:
 
-# 
+1. **True factor analysis**: Extracts common variance only
+2. **Error variance**: Separates error variance from common variance
+3. **Theoretical alignment**: Aligns with common factor model
+4. **Publication standards**: Widely accepted in psychometric research
 
-# 1\. \*\*Questionnaire Translation\*\*: Dutch translations of IAS and IATS
+**Note**: PCA is a data reduction technique, not true factor analysis.
 
-# 2\. \*\*Data Collection\*\*: Data collected through research organization Flycatcher (https://www.flycatcher.eu/nl/)
+### Confirmatory Factor Analysis
 
-# 3\. \*\*Statistical Validation\*\*: Multi-step validation using PCA, internal consistency, CFA, and criterion validity
+#### Fit Index Cutoffs
 
-# 4\. \*\*Interpretation\*\*: Evaluation of psychometric properties
+Based on **Hu & Bentler (1999)**, we use:
 
-# 
+| Index | Acceptable | Good | Rationale |
+|-------|-----------|------|-----------|
+| CFI | ≥0.90 | ≥0.95 | Incremental fit relative to baseline |
+| TLI | ≥0.90 | ≥0.95 | Penalizes model complexity |
+| RMSEA | ≤0.08 | ≤0.06 | Parsimony-adjusted badness-of-fit |
+| SRMR | ≤0.08 | ≤0.05 | Standardized residual correlations |
 
-# \## Questionnaire Information
+**Important**: 
+- No single index defines "good fit"
+- Consider multiple indices together
+- Theoretical meaningfulness trumps statistical fit
+- Sample size affects some indices (e.g., χ²)
 
-# 
+#### Model Comparison
 
-# \### Interoceptive Accuracy Scale (IAS)
+We test multiple models:
 
-# \- \*\*Original Authors\*\*: Murphy, J., Brewer, R., Plans, D., Khalsa, S. S., Catmur, C., \& Bird, G. (2020). Testing the independence of self-reported interoceptive accuracy and attention. Quarterly journal of experimental psychology (2006), 73(1), 115–133. https://doi.org/10.1177/1747021819879826
+1. **EFA-derived structure**: Empirically determined from Sample 1
+2. **Single-factor model**: Theoretical baseline comparison
+3. **Competing models**: If theoretically justified
 
-# \- \*\*Purpose\*\*: Measures perceived ability to accurately detect internal bodily signals
+**Decision rule**: Prefer simpler model unless more complex model shows substantially better fit (ΔCFI >0.01, ΔRMSEA >0.015)
 
-# \- \*\*Items\*\*: 21 items
+### Measurement Invariance
 
-# \- \*\*Response Scale\*\*: 1 = Strongly disagree, 5 = Strongly agree
+#### Why Test Invariance?
 
-# \- \*\*Scoring\*\*: Higher scores indicate greater perceived interoceptive accuracy
+**Measurement invariance** ensures scales measure the same construct across groups:
 
-# 
+1. **Fairness**: Prevents group bias in measurement
+2. **Comparability**: Allows meaningful group comparisons
+3. **Validity**: Supports construct validity across populations
 
-# \### Interoceptive Attention Scale (IATS)
+#### Invariance Levels
 
-# \- \*\*Original Authors\*\*: Gabriele, E., Spooner, R., Brewer, R., \& Murphy, J. (2022). Dissociations between self-reported interoceptive accuracy and attention: Evidence from the Interoceptive Attention Scale. Biological psychology, 168, 108243. https://doi.org/10.1016/j.biopsycho.2021.108243
+**Configural invariance** (baseline):
+- Same factor structure across groups
+- Parameters estimated freely per group
+- Establishes baseline for comparisons
 
-# \- \*\*Purpose\*\*: Measures attention paid to internal bodily signals
+**Metric invariance** (weak):
+- Equal factor loadings across groups
+- Tests if items relate to factors equivalently
+- Required for meaningful comparisons of relationships
 
-# \- \*\*Items\*\*: 21 items
+**Scalar invariance** (strong):
+- Equal factor loadings AND intercepts
+- Tests if items have same meaning across groups
+- Required for meaningful mean comparisons
 
-# \- \*\*Response Scale\*\*: 1 = Strongly disagree, 5 = Strongly agree
+#### Decision Criteria
 
-# \- \*\*Scoring\*\*: Higher scores indicate greater attention to bodily signals
+Based on **Cheung & Rensvold (2002)**:
 
-# 
+- **ΔCFI ≤ 0.01**: Invariance supported
+- **ΔRMSEA ≤ 0.015**: Invariance supported
 
-# \### Validation Questionnaires
+**Both criteria** should be met to support invariance at each level.
 
-# 
+### Reliability
 
-# \#### Body Perception Questionnaire (BPQ)
+#### Cronbach's Alpha
 
-# \- \*\*Purpose\*\*: Measures awareness of normal bodily functions
+**Strengths**:
+- Widely used and understood
+- Assesses internal consistency
+- Easy to interpret
 
-# \- \*\*Used for\*\*: Convergent validity
+**Limitations**:
+- Assumes tau-equivalent model (equal loadings)
+- Underestimates reliability when loadings vary
+- Affected by number of items
 
-# 
+**Interpretation**:
+- α ≥ 0.90: Excellent
+- α ≥ 0.80: Good
+- α ≥ 0.70: Acceptable
+- α < 0.70: Questionable
 
-# \#### Interoceptive Confusion Questionnaire (ICQ)
+#### McDonald's Omega
 
-# \- \*\*Purpose\*\*: Measures confusion about bodily signals
+**Advantages** over alpha:
+- Based on factor analysis
+- Accounts for different loadings
+- More accurate reliability estimate
+- Preferred in modern psychometrics
 
-# \- \*\*Used for\*\*: Discriminant validity
+**Types**:
+- **ω_total**: Overall reliability
+- **ω_hierarchical**: Reliability due to general factor
 
-# 
+**Interpretation**: Same thresholds as alpha
 
-# \#### Beck Depression Inventory (BDI)
+**When to use**:
+- Always report omega alongside alpha
+- Prefer omega when loadings vary substantially
+- Required for multidimensional scales
 
-# \- \*\*Purpose\*\*: Measures depressive symptoms
+### Missing Data
 
-# \- \*\*Used for\*\*: Testing known-groups validity
+#### Multiple Imputation (MICE)
 
-# 
+**Why imputation?**
+- Preserves sample size
+- Reduces bias vs. listwise deletion
+- Properly accounts for uncertainty
 
-# \#### Toronto Alexithymia Scale (TAS)
+**Parameters**:
+- **Method**: MICE (Multivariate Imputation by Chained Equations)
+- **Datasets**: 5 imputed datasets
+- **Iterations**: 10 per dataset
+- **Predictors**: All scale items + demographics
 
-# \- \*\*Purpose\*\*: Measures difficulty identifying and describing emotions
+**Assumptions**:
+- Data Missing at Random (MAR)
+- Predictor variables informationally related to missing data
 
-# \- \*\*Used for\*\*: Discriminant validity
+**Alternatives considered**:
+- Listwise deletion: Loses power, introduces bias
+- Mean imputation: Underestimates variance
+- Single imputation: Doesn't account for uncertainty
 
-# 
+### Split-Sample Design
 
-# \## Statistical Methods
+#### Rationale
 
-# 
+**Cross-validation** prevents capitalization on chance:
 
-# \### Principal Component Analysis (PCA)
+1. **Sample 1 (EFA)**: Exploratory, data-driven factor extraction
+2. **Sample 2 (CFA)**: Confirmatory, theory-testing
 
-# \- \*\*Purpose\*\*: Explore underlying factor structure
+**Advantages**:
+- Stronger evidence for factor structure
+- Reduces overfitting
+- Demonstrates replicability
+- Publication standard for scale validation
 
-# \- \*\*Method\*\*: Eigenvalue > 1 criterion with varimax rotation
+**Trade-off**: Requires larger sample, but worth it for rigor
 
-# \- \*\*Output\*\*: Factor loadings and variance explained
+**Alternative**: If sample too small, consider:
+- Single-sample CFA only
+- Cross-validation with independent dataset
+- Bootstrap validation
 
-# 
+### Regression Analysis
 
-# \### Internal Consistency Analysis
+#### Univariate vs. Multiple Regression
 
-# \- \*\*Method\*\*: Cronbach's alpha calculation
+We use **univariate (simple) regression**:
 
-# \- \*\*Tested\*\*: Overall scales and factor-specific reliability
+**Rationale**:
+- Isolates unique effect of each predictor
+- Avoids multicollinearity issues
+- Easier interpretation
+- Appropriate for exploratory convergent validity
 
-# \- \*\*Benchmark\*\*: α > 0.70 for acceptable reliability
+**When multiple regression preferred**:
+- Controlling for confounds
+- Testing mediation/moderation
+- Estimating unique variance
+- Theory specifies multiple predictors
 
-# 
+#### Assumption Testing
 
-# \### Confirmatory Factor Analysis (CFA)
+All regression models checked for:
 
-# \- \*\*Purpose\*\*: Test theoretical factor structures
+1. **Normality of residuals**: Shapiro-Wilk test
+2. **Heteroscedasticity**: Breusch-Pagan test
+3. **Linearity**: Visual inspection of scatterplots
+4. **Independence**: Assumed from study design
 
-# \- \*\*Models Tested\*\*: 1-factor, 2-factor, 3-factor, and 4-factor solutions
+**Violations**: Reported and may require transformations or robust methods
 
-# \- \*\*Fit Indices\*\*: χ², CFI, TLI, RMSEA
+## Interpretation Guidelines
 
-# \- \*\*Cross-validation\*\*: Train/test split (50/50)
+### How to Read Results Tables
 
-# 
+#### EFA Results
 
-# \### Criterion Validity
+```
+Factor Loadings:
+               Factor1  Factor2  Communality
+Item_1         0.856    0.123    0.749
+Item_2         0.742    0.089    0.558
+...
+```
 
-# \- \*\*Method\*\*: Univariate regression analyses
+**Interpretation**:
+- **Loadings >0.40**: Substantial (item assigned to factor)
+- **Cross-loadings**: Items loading >0.40 on multiple factors
+- **Communality**: Proportion of variance explained (h²)
 
-# \- \*\*Predictors\*\*: IAS and IATS total scores
+#### CFA Results
 
-# \- \*\*Outcomes\*\*: BPQ, ICQ, BDI, TAS total scores
+```
+Model Fit:
+χ² = 245.67, df = 142, p < .001
+CFI = 0.942
+TLI = 0.931
+RMSEA = 0.052 [90% CI: 0.041, 0.063]
+SRMR = 0.058
+```
 
-# 
+**Interpretation**:
+- **χ²**: Significant is common with large samples (de-emphasize)
+- **CFI, TLI**: Close to 1.0 indicates good fit
+- **RMSEA**: Lower is better, include confidence interval
+- **SRMR**: Average residual correlation
 
-# \## Technical Implementation
+#### Reliability Results
 
-# 
+```
+Cronbach's α = 0.887
+McDonald's ω_t = 0.901
+```
 
-# \### Software Requirements
+**Interpretation**:
+- Values >0.80 indicate good internal consistency
+- Omega typically slightly higher than alpha
+- Large discrepancy suggests tau-equivalence violated
 
-# \- \*\*Python\*\*: Version 3.8 or higher
+#### Invariance Results
 
-# \- \*\*Key Packages\*\*: pandas, numpy, scikit-learn, factor-analyzer, semopy
+```
+Configural:  CFI = 0.945, RMSEA = 0.054
+Metric:      CFI = 0.941, RMSEA = 0.056
+  ΔCFI = -0.004, ΔRMSEA = 0.002 → Metric invariance supported
+Scalar:      CFI = 0.935, RMSEA = 0.059  
+  ΔCFI = -0.006, ΔRMSEA = 0.003 → Scalar invariance supported
+```
 
-# \- \*\*Statistical Environment\*\*: Suitable for reproducible research
+**Interpretation**:
+- Small ΔCFI and ΔRMSEA → Invariance supported
+- Supported invariance → Valid group comparisons possible
 
-# 
+### Common Questions
 
-# \### Analysis Features
+**Q: My CFI is 0.89. Is my model bad?**
+A: Not necessarily. Fit indices are guidelines, not rules. Consider:
+- Sample size (affects some indices)
+- Model complexity
+- Theoretical meaningfulness
+- Other fit indices
+- Modification indices for improvement
 
-# \- \*\*Reproducibility\*\*: Fixed random seeds for replicable results
+**Q: What if invariance isn't supported?**
+A: Options include:
+1. **Partial invariance**: Free specific parameters
+2. **Post-hoc investigation**: Why are groups different?
+3. **Separate analyses**: Analyze groups independently
+4. **Reconsider grouping**: Is grouping variable appropriate?
 
-# \- \*\*Error Handling\*\*: Robust error checking throughout pipeline
+**Q: Should I delete low-loading items?**
+A: Consider:
+- **Theory**: Does item belong conceptually?
+- **Reliability**: Impact on scale reliability
+- **Content validity**: Balance coverage vs. parsimony
+- **Publication**: Document all decisions
 
-# \- \*\*Visualization\*\*: Automatic generation of scree plots
+**Q: When should I use robust estimators?**
+A: Consider robust estimators when:
+- Assumptions violated
+- Non-normal data
+- Small samples
+- Ordinal data with few categories
 
-# \- \*\*Documentation\*\*: Comprehensive code documentation
+## References
 
-# 
+### Key Papers (Alphabetical)
 
-# \## Interpretation Guidelines
+1. Cheung, G. W., & Rensvold, R. B. (2002). Evaluating goodness-of-fit indexes for testing measurement invariance. *Structural Equation Modeling, 9*(2), 233-255.
 
-# 
+2. Fabrigar, L. R., Wegener, D. T., MacCallum, R. C., & Strahan, E. J. (1999). Evaluating the use of exploratory factor analysis in psychological research. *Psychological Methods, 4*(3), 272-299.
 
-# \### Factor Structure
+3. Horn, J. L. (1965). A rationale and test for the number of factors in factor analysis. *Psychometrika, 30*(2), 179-185.
 
-# \- \*\*Kaiser Criterion\*\*: Factors with eigenvalues > 1
+4. Hu, L. T., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling, 6*(1), 1-55.
 
-# \- \*\*Scree Plot\*\*: Visual inspection for optimal number of factors
+5. McDonald, R. P. (1999). *Test theory: A unified treatment*. Mahwah, NJ: Erlbaum.
 
-# \- \*\*Rotation\*\*: Varimax rotation for interpretable factors
+6. Tabachnick, B. G., & Fidell, L. S. (2013). *Using multivariate statistics* (6th ed.). Boston, MA: Pearson.
 
-# 
+### Recommended Textbooks
 
-# \### Model Fit Evaluation
+- Brown, T. A. (2015). *Confirmatory factor analysis for applied research* (2nd ed.). New York, NY: Guilford Press.
+- Kline, R. B. (2016). *Principles and practice of structural equation modeling* (4th ed.). New York, NY: Guilford Press.
+- Revelle, W. (2020). *Psych: Procedures for psychological, psychometric, and personality research*. Evanston, IL: Northwestern University.
 
-# \- \*\*Good Fit\*\*: CFI/TLI > 0.95, RMSEA < 0.06
+## Additional Resources
 
-# \- \*\*Acceptable Fit\*\*: CFI/TLI > 0.90, RMSEA < 0.08
+- [Factor Analysis Decision Tree](https://www.tandfonline.com/doi/full/10.1080/00223891.2018.1449025)
+- [SEM Fit Index Interpretations](https://davidakenny.net/cm/fit.htm)
+- [McDonald's Omega Calculator](https://www.real-statistics.com/reliability/omega/)
 
-# \- \*\*Poor Fit\*\*: Below acceptable thresholds
+---
 
-# 
-
-# \### Effect Size Interpretation
-
-# \- \*\*Small\*\*: r = 0.10
-
-# \- \*\*Medium\*\*: r = 0.30  
-
-# \- \*\*Large\*\*: r = 0.50
-
-# 
-
-# \## Citation Guidelines
-
-# 
-
-# \### Citing This Work
-
-# ```
-
-# Mulder, J., Elferink-Gemser, M. T., de Vries, J. D., \& Kiefte-de Jong, J. C. (2025). Reliability and Validity of the Dutch Interoceptive Accuracy Scale and Interoceptive Attention Scale. medRxiv. https://doi.org/https://doi.org/10.1101/2025.05.06.25326009
-
-
-
-# ```
-
+**Questions or suggestions for documentation improvements?**  
+Please open an issue or submit a pull request.

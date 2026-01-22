@@ -1,192 +1,194 @@
-# \# Data Documentation
+# Data Directory
 
-# 
+This directory contains the input data for the psychometric validation analyses.
 
-# This folder contains the dataset used for validating the Dutch translations of the IAS and IATS questionnaires.
+## ⚠️ Important Note
 
-# 
+**Data files are NOT tracked in version control** for privacy and ethical reasons. This directory contains only documentation and is included in `.gitignore`.
 
-# \## Data Privacy
+## Data Requirements
 
-# 
+### File Format
 
-# \*\*Important\*\*: The actual data files are not included in this public repository to protect participant privacy. Only the analysis code is shared publicly.
+- **Required format**: SPSS (.sav) file
+- **Encoding**: UTF-8 recommended
+- **File size**: No specific limit, but large files (>100MB) may require additional memory
 
-# 
+### Required Variables
 
-# \## Expected Data Format
+#### Scale Items
 
-# 
+All scale items should be coded as numeric variables with appropriate value labels.
 
-# The analysis script expects a data file (`.sav` or `.csv` format).
+**IAS (Interoceptive Accuracy Scale)**
+- Variables: `IAS_1`, `IAS_2`, ..., `IAS_21`
+- Items: 21
+- Response scale: [Document your scale, e.g., 1-5 Likert]
 
-# 
+**IATS (Interoceptive Attention Scale)**
+- Variables: `IATS_1`, `IATS_2`, ..., `IATS_21`
+- Items: 21
+- Response scale: [Document your scale]
 
-# \### Required Variables
+**ICQ (Interoceptive Confidence Questionnaire)**
+- Variables: `ICQ_1`, `ICQ_2`, ..., `ICQ_20`
+- Items: 20
+- Response scale: [Document your scale]
 
-# 
+**BPQ (Body Perception Questionnaire)**
+- Awareness subscale: `BPQ_Awareness_1` to `BPQ_Awareness_26` (26 items)
+- ANS subscale: `BPQ_ANS_1` to `BPQ_ANS_20` (20 items)
+- Total: 46 items
+- Response scale: [Document your scale]
 
-# \#### Participant Information
+**BDI (Beck Depression Inventory)**
+- Variables: `BDI_1`, `BDI_2`, ..., `BDI_21`
+- Items: 21
+- Response scale: [Document your scale]
 
-# \- `Persoon\_ID`: Unique participant identifier
+**TAS (Toronto Alexithymia Scale)**
+- Variables: `TAS_1`, `TAS_2`, ..., `TAS_20`
+- Items: 20
+- Response scale: [Document your scale]
 
-# \- `Leeftijd`: Age (numeric)
+#### Total Scores
 
-# \- `Geslacht`: Gender (coded as appropriate for your study)
+Pre-calculated total scores (optional but recommended for validation):
 
-# 
+- `IAS_Totaal`: Sum of IAS items
+- `IATS_Totaal`: Sum of IATS items
+- `ICQ_Totaal`: Sum of ICQ items
+- `BPQ_Awareness_Totaal`: Sum of BPQ Awareness items
+- `BPQ_ANS_Totaal`: Sum of BPQ ANS items
+- `BPQ_Totaal`: Sum of all BPQ items
+- `BDI_Totaal`: Sum of BDI items
+- `TAS_Totaal`: Sum of TAS items
 
-# \#### IAS Items (Interoceptive Accuracy Scale)
+#### Demographics and Covariates
 
-# \- `IAS\_1` through `IAS\_21`: Individual IAS item responses
+**Required**:
+- `Geslacht`: Gender (for measurement invariance testing)
+  - Coding: [e.g., 1 = Male, 2 = Female]
+  
+- `Leeftijd`: Age in years
+  - Type: Numeric
+  - Range: [e.g., 18-99]
 
-# \- `IAS\_Totaal`: IAS total score (sum of items)
+**Optional** (for descriptive statistics):
+- `Geen_ChronischeAandoening`: Chronic illness status
+- `Inkomen_Cat`: Income category
+- `SES`: Socioeconomic status
 
-# 
+### Data Quality Requirements
 
-# \#### IATS Items (Interoceptive Attention Scale)
+#### Missing Data
 
-# \- `IATS\_1` through `IATS\_21`: Individual IATS item responses
+- **Maximum acceptable**: <20% missing per variable
+- **Pattern**: Completely at Random (MCAR) or At Random (MAR) preferred
+- **Handling**: Multiple imputation (MICE) is applied automatically
 
-# \- `IATS\_Totaal`: IATS total score (sum of items)
+#### Outliers
 
-# 
+- Univariate outliers (>3 SD) are identified and reported
+- Multivariate outliers should be investigated before analysis
+- Consider data entry errors vs. valid extreme responses
 
-# \#### Validation Questionnaires (Total Scores)
+### Variable Naming Conventions
 
-# \- `BPQ\_Totaal`: Body Perception Questionnaire total score
+If your variable names differ from those expected, update the variable lists in the script:
 
-# \- `ICQ\_Totaal`: Interoceptive Confusion Questionnaire total score
+```python
+# Example: If your IAS items are named IAS01, IAS02, ...
+IAS_ITEMS = [f'IAS{i:02d}' for i in range(1, 22)]
 
-# \- `BDI\_Totaal`: Beck Depression Inventory total score
+# Example: If gender is coded as 'sex' instead of 'Geslacht'
+STRATIFY_VARIABLE = 'sex'
+```
 
-# \- `TAS\_Totaal`: Toronto Alexithymia Scale total score
+## Data Preparation Checklist
 
-# 
+Before running the analysis, ensure:
 
-# \### Data Requirements
+- [ ] Data is in SPSS (.sav) format
+- [ ] All required scale items are present
+- [ ] Variable names match those specified in script or have been updated
+- [ ] Missing values are properly coded (not as 999 or -99)
+- [ ] Response scales are documented
+- [ ] No duplicate participant IDs
+- [ ] Data has been checked for entry errors
+- [ ] Ethical approval obtained for data use
+- [ ] Appropriate permissions for data sharing (if applicable)
 
-# 
+## Data Security and Ethics
 
-# \#### Scale Responses
+### Privacy
 
-# \- \*\*IAS/IATS Items\*\*: Should be on the original response scale (1-5 Likert scale)
+- **Personal identifiers**: Remove all direct identifiers before analysis
+- **De-identification**: Ensure data cannot be traced back to individuals
+- **Sensitive variables**: Handle with appropriate security measures
 
-# \- \*\*Total Scores\*\*: Pre-calculated total scores for each questionnaire
+### Ethical Considerations
 
-# \- \*\*Missing Data\*\*: The script will handle missing data appropriately
+- Obtain institutional review board (IRB) approval before data collection
+- Ensure informed consent from all participants
+- Follow data protection regulations (GDPR, HIPAA, etc.)
+- Maintain participant confidentiality
+- Store data securely with appropriate access controls
 
-# 
+### Data Sharing
 
-# \### File Formats Supported
+When sharing analysis results:
 
-# 
+- Never commit raw data files to version control
+- Share only aggregated or de-identified results
+- Follow your institution's data sharing policies
+- Consider using restricted access repositories if sharing is necessary
 
-# \#### SPSS Files (.sav)
+## Example Data Structure
 
-# ```python
+```
+data/
+├── README.md                          # This file
+├── Part1_data.sav                     # Main dataset (NOT in git)
+├── data_dictionary.csv                # Variable descriptions (optional)
+└── codebook.pdf                       # Detailed codebook (optional)
+```
 
-# \# The script will load using:
+## Troubleshooting
 
-# df = pd.read\_spss('your\_file.sav', convert\_categoricals=False)
+### Common Issues
 
-# ```
+**"Data file not found"**
+- Ensure data file is in the `data/` directory
+- Update `DATA_PATH` in script configuration
+- Check file extension (.sav)
 
-# 
+**"Variable not found"**
+- Verify variable names in SPSS file match script expectations
+- Update variable name lists in script if needed
+- Check for spelling/capitalization differences
 
-# \#### CSV Files (.csv)
+**"Too many missing values"**
+- Review data collection procedures
+- Consider listwise deletion for variables with >20% missing
+- Document missing data patterns
 
-# ```python
+**"SPSS file won't open"**
+- Check SPSS file version (older versions preferred)
+- Try re-saving in SPSS with compatibility mode
+- Use `pyreadstat` to inspect file structure
 
-# \# Alternatively, for CSV files:
+### Getting Help
 
-# df = pd.read\_csv('your\_file.csv')
+If you encounter data-related issues:
 
-# ```
+1. Check variable names: `df.columns.tolist()`
+2. Check data types: `df.dtypes`
+3. Check missing patterns: `df.isnull().sum()`
+4. Inspect first rows: `df.head()`
 
-# 
+## References
 
-# \### Data Quality Checks
-
-# 
-
-# The analysis script performs the following data quality checks:
-
-# 
-
-# 1\. \*\*Outlier Detection\*\*: Removes participants with Z-scores > 3 on any total score
-
-# 2\. \*\*Missing Data\*\*: Reports missing data patterns
-
-# 3\. \*\*Range Checks\*\*: Ensures responses are within expected ranges
-
-# 
-
-# \### Variable Coding
-
-# 
-
-# \#### Gender (`Geslacht`)
-
-# \- 1 = Male, 2 = Female
-
-# 
-
-# \#### Response Scales
-
-# \- \*\*IAS\*\*: 1 = Strongly disagree, 5 = Strongly agree
-
-# \- \*\*IATS\*\*: 1 = Strongly disagree, 5 = Strongly agree
-
-# \- \*\*Validation questionnaires\*\*: See citation
-
-# 
-
-# \## Data Preparation Steps
-
-# 
-
-# Before running the analysis:
-
-# 
-
-# 1\. \*\*Place your data file\*\* in this `data/` folder
-
-# 2\. \*\*Update the file path\*\* in `analysis.py`:
-
-# &nbsp;  ```python
-
-# &nbsp;  DATA\_PATH = 'data/your\_actual\_filename.sav'
-
-# &nbsp;  ```
-
-# 3\. \*\*Verify variable names\*\* match those expected by the script
-
-# 4\. \*\*Check data types\*\* are appropriate (numeric for scales, categorical for demographics)
-
-# 
-
-# \## Confidentiality
-
-# 
-
-# \- All data should be de-identified before analysis
-
-# \- Participant IDs should not be traceable to individuals
-
-# \- Follow your institution's ethical guidelines for data sharing
-
-# \- Consider data encryption for sensitive information
-
-# 
-
-# \## Data Citation
-
-# 
-
-# When using this analysis approach, please cite both:
-
-# 1\. The original questionnaire developers
-
-# 2\. This validation study
-
+- Field, A. (2013). *Discovering statistics using IBM SPSS statistics* (4th ed.). Sage.
+- Tabachnick, B. G., & Fidell, L. S. (2013). *Using multivariate statistics* (6th ed.). Pearson.
+- van Buuren, S. (2018). *Flexible imputation of missing data* (2nd ed.). CRC Press.
