@@ -89,7 +89,7 @@ np.random.seed(RANDOM_SEED)
 # ============================================================================
 # File paths - configure for your system
 # Use relative paths for reproducibility
-DATA_PATH = Path('./data/Part1_data.sav')  # Update filename as needed
+DATA_PATH = Path('./data/yourdata.sav')  # Update filename as needed
 OUTPUT_DIR = Path('./output')
 
 # Ensure output directory exists
@@ -515,9 +515,9 @@ def perform_efa_analysis(data, items, scale_name, n_factors_pa):
     """
     Perform comprehensive EFA analysis
     """
-    print(f"\n{"=" * 80}")
+    print(f'\n{"=" * 80}')
     print(f"EXPLORATORY FACTOR ANALYSIS - {scale_name}")
-    print(f"{"=" * 80}")
+    print(f'{"=" * 80}')
 
     data_subset = data[items].copy()
     n_obs = len(data_subset)
@@ -973,9 +973,9 @@ def perform_cfa_analysis(data, items, scale_name, efa_results):
     Perform Confirmatory Factor Analysis
     Tests both EFA-derived structure and single-factor model
     """
-    print(f"\n{"=" * 80}")
+    print(f'\n{"=" * 80}')
     print(f"CONFIRMATORY FACTOR ANALYSIS - {scale_name}")
-    print(f"{"=" * 80}")
+    print(f'{"=" * 80}')
 
     data_subset = data[items].dropna()
     n_factors_efa = efa_results['n_factors']
@@ -1222,9 +1222,9 @@ def test_measurement_invariance(data, items, scale_name, model_spec, group_var='
     Returns fit indices and change statistics (ΔCFI, ΔRMSEA) for each level
     Note: Always runs regardless of baseline CFA fit
     """
-    print(f"\n{"=" * 80}")
+    print(f'\n{"=" * 80}')
     print(f"MEASUREMENT INVARIANCE TESTING - {scale_name}")
-    print(f"{"=" * 80}")
+    print(f'{"=" * 80}')
 
     data_subset = data[items + [group_var]].dropna()
 
@@ -1466,8 +1466,7 @@ if 'best_model' in ias_cfa_results:
             model_spec=model_spec,
             group_var='Geslacht'
         )
-        print("\n⚠ CFA does not show acceptable fit - skipping measurement invariance testing")
-
+        
 #%% ANALYSIS: IATS (Interoceptive Attention Scale)
 # ============================================================================
 # Run complete psychometric analysis for IATS
