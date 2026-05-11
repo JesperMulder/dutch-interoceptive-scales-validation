@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Dutch Interoceptive Scales Validation - Psychometric Analysis
-==============================================================
+Analysis Script: Psychometric validation Dutch IAS and IATS
+Paper: Reliability and Validity of the Dutch Interoceptive Accuracy Scale and
+       Interoceptive Attention Scale
 
 Comprehensive psychometric validation of Dutch versions of interoceptive scales
 including Exploratory Factor Analysis (EFA), Confirmatory Factor Analysis (CFA),
@@ -19,7 +20,6 @@ Author: Jesper Mulder
 Institution: Leiden University Medical Center
 License: MIT
 Repository: https://github.com/JesperMulder/dutch-interoceptive-scales-validation
-Version: 2.0.0
 Date: 2026
 """
 #%% IMPORTS & ENVIRONMENT
@@ -89,7 +89,7 @@ np.random.seed(RANDOM_SEED)
 # ============================================================================
 # File paths - configure for your system
 # Use relative paths for reproducibility
-DATA_PATH = Path('./data/yourdata.sav')  # Update filename as needed
+DATA_PATH = Path('./data/Part1_19082024_clean_JM_version2.sav')  # Update filename as needed
 OUTPUT_DIR = Path('./output')
 
 # Ensure output directory exists
@@ -196,6 +196,227 @@ except Exception as e:
     print(f"✗ Error loading data: {str(e)}")
     sys.exit(1)
     raise
+
+#%% SCALE VALIDATION & CORRECTION
+print("\n" + "=" * 80)
+print("SCALE VALIDATION & CORRECTION")
+print("=" * 80)
+print("Checking whether all item and total score ranges are on the expected scale.")
+print("=" * 80)
+
+# ============================================================================
+# SCALE SPECIFICATIONS
+# Each entry defines:
+#   items         : list of item column names
+#   item_min      : expected minimum for a single item
+#   item_max      : expected maximum for a single item
+#   totals        : dict mapping total-score column name -> (expected_min, expected_max)
+#   subscales     : dict mapping subscale total name -> list of contributing item names
+#                   (used to recompute totals from corrected items; empty if not applicable)
+# ============================================================================
+SCALE_SPECS = {
+    'IAS': {
+        'items'     : IAS_ITEMS,
+        'item_min'  : 1,
+        'item_max'  : 5,
+        'totals'    : {'IAS_Totaal': (21, 105)},
+        'subscales' : {'IAS_Totaal': IAS_ITEMS}
+    },
+    'IATS': {
+        'items'     : IATS_ITEMS,
+        'item_min'  : 1,
+        'item_max'  : 5,
+        'totals'    : {'IATS_Totaal': (21, 105)},
+        'subscales' : {'IATS_Totaal': IATS_ITEMS}
+    },
+    'ICQ': {
+        'items'     : ICQ_ITEMS,
+        'item_min'  : 1,
+        'item_max'  : 5,
+        'totals'    : {'ICQ_Totaal': (20, 100)},
+        'subscales' : {'ICQ_Totaal': ICQ_ITEMS}
+    },
+    'BPQ': {
+        'items'     : BPQ_ITEMS,                         # 46 items (Awareness + ANS)
+        'item_min'  : 1,
+        'item_max'  : 5,
+        'totals'    : {
+            'BPQ_Awareness_Totaal': (26, 130),
+            'BPQ_ANS_Totaal'      : (20, 100),
+            'BPQ_Totaal'          : (46, 230)
+        },
+        'subscales' : {
+            'BPQ_Awareness_Totaal': BPQ_AWARENESS_ITEMS,
+            'BPQ_ANS_Totaal'      : BPQ_ANS_ITEMS,
+            'BPQ_Totaal'          : BPQ_ITEMS
+        }
+    },
+    'BDI': {
+        'items'     : BDI_ITEMS,
+        'item_min'  : 0,
+        'item_max'  : 3,
+        'totals'    : {'BDI_Totaal': (0, 63)},
+        'subscales' : {'BDI_Totaal': BDI_ITEMS}
+    },
+    'TAS': {
+        'items'     : TAS_ITEMS,
+        'item_min'  : 1,
+        'item_max'  : 5,
+        'totals'    : {'TAS_Totaal': (20, 100)},
+        'subscales' : {'TAS_Totaal': TAS_ITEMS}
+    }
+}
+
+# ============================================================================
+# VALIDATION AND CORRECTION LOGIC
+# Detection rule: a +1 shift is flagged when the observed minimum across all
+# items of a scale equals the expected minimum + 1.  The observed maximum is
+# checked as a secondary confirmation.  Both conditions must hold to trigger
+# a correction, preventing false positives from data entry errors or genuine
+# extreme responding.
+# ============================================================================
+
+scale_audit = []          # Collects one summary row per scale for reporting
+scales_corrected = []     # Tracks which scales were corrected
+
+for scale_name, spec in SCALE_SPECS.items():
+    print(f"\n--- {scale_name} ---")
+
+    # --- Identify item columns that are actually present in the dataframe
+    available_items = [col for col in spec['items'] if col in df_analysis.columns]
+    missing_item_cols = [col for col in spec['items'] if col not in df_analysis.columns]
+
+    if missing_item_cols:
+        print(f"  Warning: {len(missing_item_cols)} item column(s) not found in data "
+              f"and will be skipped: {missing_item_cols}")
+
+    if len(available_items) == 0:
+        print(f"  Error: No item columns found for {scale_name}. Skipping.")
+        scale_audit.append({
+            'Scale'              : scale_name,
+            'Items_Found'        : 0,
+            'Observed_Item_Min'  : None,
+            'Observed_Item_Max'  : None,
+            'Expected_Item_Range': f"{spec['item_min']}-{spec['item_max']}",
+            'Shift_Detected'     : False,
+            'Corrected'          : False,
+            'Notes'              : 'No item columns found'
+        })
+        continue
+
+    # --- Compute observed item-level statistics (ignoring missing values)
+    item_data = df_analysis[available_items]
+    observed_item_min = item_data.min().min()
+    observed_item_max = item_data.max().max()
+
+    expected_min = spec['item_min']
+    expected_max = spec['item_max']
+
+    print(f"  Items found        : {len(available_items)} / {len(spec['items'])}")
+    print(f"  Expected item range: {expected_min} - {expected_max}")
+    print(f"  Observed item range: {observed_item_min:.0f} - {observed_item_max:.0f}")
+
+    # --- Detect +1 shift: observed min and max are both exactly 1 above expected
+    shift_detected = (
+        observed_item_min == expected_min + 1 and
+        observed_item_max == expected_max + 1
+    )
+
+    # --- Detect out-of-range values that do not match the +1 shift pattern
+    out_of_range = (
+        observed_item_min < expected_min or
+        observed_item_max > expected_max
+    ) and not shift_detected
+
+    if out_of_range:
+        print(f"  WARNING: Unexpected item range detected (not a clean +1 shift).")
+        print(f"  Manual inspection is required before proceeding.")
+
+    if shift_detected:
+        print(f"  STATUS: +1 shift detected. Correcting items and recomputing totals.")
+
+        # --- Correct item columns: subtract 1 from every available item
+        df_analysis[available_items] = df_analysis[available_items] - 1
+
+        # Verify item correction
+        corrected_item_min = df_analysis[available_items].min().min()
+        corrected_item_max = df_analysis[available_items].max().max()
+        print(f"  Corrected item range: {corrected_item_min:.0f} - {corrected_item_max:.0f}")
+
+        # --- Recompute total scores from corrected items
+        # Recomputing from items is preferred over subtracting n_items from the
+        # existing total, because it is robust to any pre-existing missing data
+        # handling or partial scoring in the original file.
+        for total_col, (total_exp_min, total_exp_max) in spec['totals'].items():
+            contributing_items = spec['subscales'].get(total_col, [])
+            available_contributing = [col for col in contributing_items
+                                      if col in df_analysis.columns]
+
+            if total_col in df_analysis.columns and len(available_contributing) > 0:
+                df_analysis[total_col] = df_analysis[available_contributing].sum(
+                    axis=1, skipna=False   # skipna=False preserves NaN where items are missing
+                )
+                corrected_total_min = df_analysis[total_col].min()
+                corrected_total_max = df_analysis[total_col].max()
+                print(f"  {total_col}: recomputed range "
+                      f"{corrected_total_min:.0f} - {corrected_total_max:.0f} "
+                      f"(expected {total_exp_min} - {total_exp_max})")
+            elif total_col not in df_analysis.columns:
+                print(f"  {total_col}: column not found in data, skipping total recomputation.")
+
+        scales_corrected.append(scale_name)
+        corrected = True
+
+    else:
+        # --- Verify that totals are also within the expected range when no shift
+        print(f"  STATUS: Item range is correct. Verifying total scores.")
+        corrected = False
+        for total_col, (total_exp_min, total_exp_max) in spec['totals'].items():
+            if total_col in df_analysis.columns:
+                observed_total_min = df_analysis[total_col].min()
+                observed_total_max = df_analysis[total_col].max()
+                total_ok = (
+                    observed_total_min >= total_exp_min and
+                    observed_total_max <= total_exp_max
+                )
+                status_flag = "OK" if total_ok else "OUT OF RANGE"
+                print(f"  {total_col}: observed {observed_total_min:.0f} - "
+                      f"{observed_total_max:.0f} "
+                      f"(expected {total_exp_min} - {total_exp_max}) [{status_flag}]")
+            else:
+                print(f"  {total_col}: column not found in data.")
+
+    # --- Record audit entry
+    scale_audit.append({
+        'Scale'              : scale_name,
+        'Items_Found'        : len(available_items),
+        'Observed_Item_Min'  : observed_item_min,
+        'Observed_Item_Max'  : observed_item_max,
+        'Expected_Item_Range': f"{expected_min} - {expected_max}",
+        'Shift_Detected'     : shift_detected,
+        'Corrected'          : corrected,
+        'Notes'              : '+1 shift corrected' if corrected else
+                               ('Out-of-range values detected' if out_of_range else 'No correction needed')
+    })
+
+# ============================================================================
+# AUDIT SUMMARY
+# ============================================================================
+print("\n" + "=" * 80)
+print("SCALE VALIDATION SUMMARY")
+print("=" * 80)
+
+scale_audit_df = pd.DataFrame(scale_audit)
+print(scale_audit_df.to_string(index=False))
+
+if scales_corrected:
+    print(f"\nScales corrected (items and totals): {', '.join(scales_corrected)}")
+    print("Note: All corrections applied directly to df_analysis before imputation.")
+    print("      Raw data file has NOT been modified.")
+else:
+    print("\nAll scales validated. No corrections required.")
+
+print("=" * 80)
 
 #%% ENHANCED MISSING DATA IMPUTATION
 print("\n" + "=" * 80)
