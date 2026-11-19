@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-Comprehensive psychometric validation of Dutch versions of interoceptive awareness scales using advanced factor analytic and structural equation modeling techniques.
+Analysis code for the psychometric validation of the Dutch IAS and IATS (Mulder et al., 2026, *Journal of Health Psychology*, [doi:10.1177/13591053261449068](https://doi.org/10.1177/13591053261449068)), covering EFA, CFA, reliability, measurement invariance and regression.
 
 ## Overview
 
@@ -31,7 +31,7 @@ This repository contains analysis scripts and documentation for the psychometric
 - **Confirmatory Factor Analysis (CFA)**
   - Structural equation modeling via SEM
   - Multiple model comparison (EFA-derived vs. single-factor)
-  - Comprehensive fit indices (CFI, TLI, RMSEA, SRMR)
+  - Fit indices (CFI, TLI, RMSEA, SRMR)
   
 - **Reliability Assessment**
   - Cronbach's alpha
@@ -48,13 +48,13 @@ This repository contains analysis scripts and documentation for the psychometric
   - Univariate (simple) linear regression
   - Assumption testing (normality, heteroscedasticity)
   - Effect size estimation
-  - Publication-quality scatterplots
+  - Scatterplots (300 DPI)
 
 ### Outputs
 
-- **Excel Workbooks**: Comprehensive results tables organized by analysis type
+- **Excel Workbooks**: Results tables, one workbook per analysis
 - **High-Resolution Figures**: Scree plots, scatterplots, and diagnostic plots (300 DPI)
-- **Formatted Tables**: Ready for publication or presentation
+- **Formatted Tables**: Excel tables for reports and slides
 
 ## Installation
 
@@ -112,7 +112,7 @@ pip install -r requirements.txt
 
 ### Configuration
 
-Key parameters can be adjusted in the `CONFIGURATION & PARAMETERS` section:
+Edit these parameters in the `CONFIGURATION & PARAMETERS` section:
 
 ```python
 # Random seed for reproducibility
@@ -177,7 +177,7 @@ See `data/README.md` for detailed data specifications.
 
 ### Split-Sample Design
 
-The analysis uses a rigorous split-sample approach:
+The analysis uses a split-sample approach:
 
 1. **Sample 1 (50%)**: Exploratory Factor Analysis (EFA)
    - Determine factor structure
@@ -188,7 +188,7 @@ The analysis uses a rigorous split-sample approach:
    - Compare with single-factor model
    - Assess measurement invariance
 
-This approach prevents capitalization on chance and provides stronger evidence for factor structure.
+Fitting the CFA on a separate half avoids capitalizing on chance.
 
 ### Missing Data
 
@@ -318,4 +318,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Note**: This analysis uses real data from human participants. Please ensure you have appropriate ethical approval and data sharing agreements before using this code with your data.
+**Note**: This analysis uses real data from human participants. Obtain ethical approval and a data sharing agreement before using this code with your own participant data.

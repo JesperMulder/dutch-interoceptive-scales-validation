@@ -107,7 +107,7 @@ STRATIFY_VARIABLE = 'sex'
 
 ## Data Preparation Checklist
 
-Before running the analysis, ensure:
+Before running the analysis, check that:
 
 - [ ] Data is in SPSS (.sav) format
 - [ ] All required scale items are present
@@ -124,13 +124,13 @@ Before running the analysis, ensure:
 ### Privacy
 
 - **Personal identifiers**: Remove all direct identifiers before analysis
-- **De-identification**: Ensure data cannot be traced back to individuals
+- **De-identification**: Confirm that no one can trace the data back to individuals
 - **Sensitive variables**: Handle with appropriate security measures
 
 ### Ethical Considerations
 
 - Obtain institutional review board (IRB) approval before data collection
-- Ensure informed consent from all participants
+- Obtain informed consent from all participants
 - Follow data protection regulations (GDPR, HIPAA, etc.)
 - Maintain participant confidentiality
 - Store data securely with appropriate access controls
@@ -159,7 +159,7 @@ data/
 ### Common Issues
 
 **"Data file not found"**
-- Ensure data file is in the `data/` directory
+- Place the data file is in the `data/` directory
 - Update `DATA_PATH` in script configuration
 - Check file extension (.sav)
 

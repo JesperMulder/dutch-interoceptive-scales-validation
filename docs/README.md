@@ -8,7 +8,7 @@ This directory contains additional documentation, supplementary materials, and m
 
 - **Statistical Methods**: Detailed description of all statistical procedures
 - **Decision Rules**: Rationale for analytical decisions
-- **Validation Procedures**: Steps taken to ensure analysis quality
+- **Validation Procedures**: Checks applied to the analysis
 
 ### Interpretation Guides
 
@@ -23,11 +23,11 @@ This directory contains additional documentation, supplementary materials, and m
 
 #### Why Parallel Analysis?
 
-**Parallel Analysis** (Horn, 1965) is considered the gold standard for determining the number of factors because:
+**Parallel Analysis** (Horn, 1965) is recommended for determining the number of factors (Horn, 1965; Fabrigar et al., 1999) because:
 
 1. **Reduces over-extraction**: Compared to Kaiser's criterion (eigenvalues >1)
 2. **Empirical comparison**: Compares real data to random data
-3. **Recommended practice**: Widely endorsed in psychometric literature
+3. **Recommended practice**: Endorsed in the psychometric literature
 
 **Implementation**:
 - 1,000 random datasets generated
@@ -52,7 +52,7 @@ This directory contains additional documentation, supplementary materials, and m
 1. **True factor analysis**: Extracts common variance only
 2. **Error variance**: Separates error variance from common variance
 3. **Theoretical alignment**: Aligns with common factor model
-4. **Publication standards**: Widely accepted in psychometric research
+4. **Convention**: Common choice in scale validation
 
 **Note**: PCA is a data reduction technique, not true factor analysis.
 
@@ -89,7 +89,7 @@ We test multiple models:
 
 #### Why Test Invariance?
 
-**Measurement invariance** ensures scales measure the same construct across groups:
+**Measurement invariance** tests whether scales measure the same construct across groups:
 
 1. **Fairness**: Prevents group bias in measurement
 2. **Comparability**: Allows meaningful group comparisons
@@ -147,7 +147,7 @@ Based on **Cheung & Rensvold (2002)**:
 - Based on factor analysis
 - Accounts for different loadings
 - More accurate reliability estimate
-- Preferred in modern psychometrics
+- Does not assume equal loadings, unlike alpha
 
 **Types**:
 - **ω_total**: Overall reliability
@@ -194,10 +194,10 @@ Based on **Cheung & Rensvold (2002)**:
 2. **Sample 2 (CFA)**: Confirmatory, theory-testing
 
 **Advantages**:
-- Stronger evidence for factor structure
+- Tests the factor structure on independent data
 - Reduces overfitting
 - Demonstrates replicability
-- Publication standard for scale validation
+- Common design in scale validation
 
 **Trade-off**: Requires larger sample, but worth it for rigor
 
@@ -321,7 +321,7 @@ A: Consider:
 - **Theory**: Does item belong conceptually?
 - **Reliability**: Impact on scale reliability
 - **Content validity**: Balance coverage vs. parsimony
-- **Publication**: Document all decisions
+- **Documentation**: Record all decisions
 
 **Q: When should I use robust estimators?**
 A: Consider robust estimators when:
