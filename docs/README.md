@@ -17,13 +17,6 @@ This directory contains additional documentation, supplementary materials, and m
 - **Reliability Coefficients**: Interpreting Cronbach's alpha and McDonald's omega
 - **Measurement Invariance**: Understanding invariance testing results
 
-### Supplementary Materials
-
-- **Questionnaires**: Original and translated scale items (if permissible)
-- **Translation Process**: Documentation of translation and back-translation
-- **Pilot Testing**: Results from pilot studies
-- **Sample Characteristics**: Detailed demographic information
-
 ## Key Methodological Decisions
 
 ### Factor Analysis
@@ -245,6 +238,8 @@ All regression models checked for:
 ## Interpretation Guidelines
 
 ### How to Read Results Tables
+
+> **Note:** All numbers in the examples below (loadings, fit indices, reliability coefficients) are **illustrative placeholders to show how to read the tables**. They are not results from this study.
 
 #### EFA Results
 

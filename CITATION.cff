@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Dutch Interoceptive Scales Validation: analysis code"
+type: software
+authors:
+  - family-names: Mulder
+    given-names: Jesper
+    affiliation: Leiden University Medical Center
+repository-code: "https://github.com/JesperMulder/dutch-interoceptive-scales-validation"
+license: MIT
+date-released: "2026-01-01"
+abstract: "Analysis code for the psychometric validation of the Dutch Interoceptive Accuracy Scale (IAS) and Interoceptive Attention Scale (IATS): EFA, CFA, reliability, measurement invariance and regression."
+keywords:
+  - interoception
+  - psychometrics
+  - factor analysis
+  - measurement invariance

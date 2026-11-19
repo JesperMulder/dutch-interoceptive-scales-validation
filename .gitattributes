@@ -1,0 +1,6 @@
+# Normalize line endings (avoids CRLF/LF noise between Windows and Linux)
+* text=auto
+*.py text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.sav binary

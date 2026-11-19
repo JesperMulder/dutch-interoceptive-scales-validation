@@ -25,7 +25,3 @@ seaborn>=0.12.0
 # Data I/O
 pyreadstat>=1.2.0  # For reading SPSS files
 openpyxl>=3.1.0    # For Excel output
-xlsxwriter>=3.1.0  # Alternative Excel writer
-
-# Utilities
-pathlib2>=2.3.0; python_version<"3.4"  # Backport for older Python

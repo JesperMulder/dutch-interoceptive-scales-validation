@@ -1,7 +1,7 @@
 # Dutch Interoceptive Scales Validation Study
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
 Comprehensive psychometric validation of Dutch versions of interoceptive awareness scales using advanced factor analytic and structural equation modeling techniques.
 
@@ -60,28 +60,28 @@ This repository contains analysis scripts and documentation for the psychometric
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - Anaconda or Miniconda (recommended)
 
 ### Option 1: Conda Environment (Recommended)
 
 ```bash
 # Clone repository
-git clone https://github.com/[username]/dutch-interoceptive-scales-validation.git
+git clone https://github.com/JesperMulder/dutch-interoceptive-scales-validation.git
 cd dutch-interoceptive-scales-validation
 
 # Create conda environment
 conda env create -f environment.yml
 
 # Activate environment
-conda activate interoceptive-validation
+conda activate dutch-interoceptive-scales-validation
 ```
 
 ### Option 2: pip Installation
 
 ```bash
 # Clone repository
-git clone https://github.com/[username]/dutch-interoceptive-scales-validation.git
+git clone https://github.com/JesperMulder/dutch-interoceptive-scales-validation.git
 cd dutch-interoceptive-scales-validation
 
 # Create virtual environment
@@ -107,7 +107,7 @@ pip install -r requirements.txt
 
 3. **Run analysis**:
    ```bash
-   python dutch_interoceptive_validation.py
+   python questionnaire_validation_analysis.py
    ```
 
 ### Configuration
@@ -225,7 +225,7 @@ dutch-interoceptive-scales-validation/
 ├── output/                            # Analysis outputs (not tracked)
 │   └── README.md                      # Output documentation
 │
-├── dutch_interoceptive_validation.py  # Main analysis script
+├── questionnaire_validation_analysis.py # Main analysis script
 ├── environment.yml                    # Conda environment specification
 ├── requirements.txt                   # pip dependencies
 ├── .gitignore                         # Git ignore rules
@@ -277,10 +277,10 @@ To exactly replicate the analysis:
 ```bash
 # Use the exact environment
 conda env create -f environment.yml
-conda activate interoceptive-validation
+conda activate dutch-interoceptive-scales-validation
 
 # Run with same seed
-python dutch_interoceptive_validation.py
+python questionnaire_validation_analysis.py
 ```
 
 ### Ways to Contribute
@@ -288,7 +288,7 @@ python dutch_interoceptive_validation.py
 - Report bugs or issues
 - Suggest enhancements
 - Improve documentation
-- Add tests
+- Add tests (the analysis needs private data, so synthetic-data tests are especially welcome)
 - Fix bugs
 
 ## License
