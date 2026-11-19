@@ -8,7 +8,7 @@ authors:
     affiliation: Leiden University Medical Center
 repository-code: "https://github.com/JesperMulder/dutch-interoceptive-scales-validation"
 license: MIT
-date-released: "2026-01-01"
+date-released: "2026-05-13"
 abstract: "Analysis code for the psychometric validation of the Dutch Interoceptive Accuracy Scale (IAS) and Interoceptive Attention Scale (IATS): EFA, CFA, reliability, measurement invariance and regression."
 keywords:
   - interoception
