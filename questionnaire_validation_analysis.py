@@ -20,7 +20,8 @@ Author: Jesper Mulder
 Institution: Leiden University Medical Center
 License: MIT
 Repository: https://github.com/JesperMulder/dutch-interoceptive-scales-validation
-Date: 2026
+Date: 2026-05-13 (article publication date)
+Article: https://doi.org/10.1177/13591053261449068
 """
 #%% IMPORTS & ENVIRONMENT
 # Standard library
@@ -418,7 +419,7 @@ else:
 
 print("=" * 80)
 
-#%% ENHANCED MISSING DATA IMPUTATION
+#%% MISSING DATA IMPUTATION
 print("\n" + "=" * 80)
 print("MISSING DATA ANALYSIS & IMPUTATION")
 print("=" * 80)
@@ -452,8 +453,8 @@ else:
         missing_patterns = data_subset.isnull().astype(int)
         unique_patterns = missing_patterns.drop_duplicates()
 
-        # Calculate test statistic (simplified version)
-        # Full implementation would require more complex calculations
+        # NOTE: Little's MCAR test is not implemented. This function only reports
+        # missing-data percentages and returns (None, None, None).
         print("  Note: Simplified MCAR test - see missing data percentages above")
         print("  If missingness is <5% per variable, MCAR assumption is typically reasonable")
 
@@ -525,7 +526,7 @@ else:
 
 print("=" * 80)
 
-#%% ENHANCED OUTLIER REMOVAL
+#%% OUTLIER REMOVAL
 print("\n" + "=" * 80)
 print("OUTLIER DETECTION & REMOVAL")
 print("=" * 80)
@@ -679,14 +680,13 @@ print("=" * 80)
 
 def calculate_polychoric_correlation(data):
     """
-    Calculate polychoric correlation matrix for ordinal data
-    Uses tetrachoric/polychoric correlations appropriate for Likert scales
+    Calculate the correlation matrix for ordinal (Likert) items
+    NOTE: Despite the function name, this returns PEARSON correlations, not polychoric.
     """
     from factor_analyzer import FactorAnalyzer
 
-    # factor_analyzer's Pearson correlation on ordinal data
-    # For true polychoric, would need additional package
-    # Using Pearson as approximation (common in practice)
+    # Pearson correlations are used on the ordinal items. Polychoric correlations
+    # would need an additional package and are not computed in this script.
     corr_matrix = data.corr(method='pearson')
 
     return corr_matrix
@@ -842,7 +842,7 @@ def perform_efa_analysis(data, items, scale_name, n_factors_pa):
     print("\nVariance Explained:")
     print(variance_df.round(3))
 
-    # Factor correlations (if oblique rotation)
+    # Factor correlations (oblique rotation): use fa.phi_ when available, otherwise derive from structure and pattern matrices
     if n_factors_efa > 1:
         try:
             # For oblique rotations, factor correlations are in phi_
@@ -852,7 +852,7 @@ def perform_efa_analysis(data, items, scale_name, n_factors_pa):
                 # Calculate from structure and pattern matrices
                 structure = fa.structure_
                 pattern = fa.loadings_
-                # phi = inv(pattern' * pattern) * pattern' * structure
+                # Fallback: solve (pattern-transpose x pattern) * phi = pattern-transpose x structure by least squares
                 factor_corr = np.linalg.lstsq(pattern.T @ pattern,
                                               pattern.T @ structure,
                                               rcond=None)[0]
@@ -948,9 +948,6 @@ def calculate_reliability(data, items, factor_structure=None):
         # Omega = (sum of loadings)^2 / ((sum of loadings)^2 + sum of error variances)
         inspect_results = model.inspect()
 
-        # Debug: show what's in inspect results
-        # print("\nDebug - Available columns:", inspect_results.columns.tolist())
-        # print("\nDebug - Operation types:", inspect_results['op'].unique() if 'op' in inspect_results.columns else "No 'op' column")
 
         # Filter for factor loadings (regression relationships)
         factor_loadings = inspect_results[inspect_results['op'] == '~'].copy() if 'op' in inspect_results.columns else pd.DataFrame()
@@ -1089,7 +1086,7 @@ def calculate_srmr_manual(model_object, data):
 
         # Extract error variances (theta matrix)
         errors_df = params[params['op'] == '~~'].copy()
-        errors_df = errors_df[errors_df['lval'] == errors_df['rval']]  # Diagonal only
+        errors_df = errors_df[errors_df['lval'] == errors_df['rval']]  # Keep variances only (lval == rval)
 
         # Create loading matrix
         loading_dict = {}
@@ -1102,7 +1099,7 @@ def calculate_srmr_manual(model_object, data):
                 loading_dict[item] = {}
             loading_dict[item][factor] = loading
 
-        # Extract factor variances and covariances
+        # Factor variances (diagonal ~~ rows) start the table; covariances (off-diagonal ~~ rows) are added below
         factor_cov_df = errors_df.copy()  # Start with variances
         factor_cov_rows = params[(params['op'] == '~~') & (params['lval'] != params['rval'])].copy()
 
@@ -1262,7 +1259,7 @@ def perform_cfa_analysis(data, items, scale_name, efa_results):
     print("Model specification:")
     print(model_spec_efa)
 
-    # Fit CFA model with WLSMV estimator
+    # Fit CFA model with WLS estimator
     try:
         model_efa = Model(model_spec_efa)
         # Note: Using WLS (Weighted Least Squares) estimation
@@ -1289,7 +1286,7 @@ def perform_cfa_analysis(data, items, scale_name, efa_results):
         tli = to_scalar(fit_measures.get('TLI', np.nan))
         rmsea = to_scalar(fit_measures.get('RMSEA', np.nan))
 
-        # Manual SRMR calculation (semopy doesn't provide SRMR)
+        # Manual SRMR (semopy does not provide it; see calculate_srmr_manual)
         print("  Calculating SRMR manually...")
         srmr = calculate_srmr_manual(model_efa, data_subset)
 
@@ -1358,7 +1355,7 @@ def perform_cfa_analysis(data, items, scale_name, efa_results):
         tli_s = to_scalar(fit_measures_s.get('TLI', np.nan))
         rmsea_s = to_scalar(fit_measures_s.get('RMSEA', np.nan))
 
-        # Manual SRMR calculation (semopy doesn't provide SRMR)
+        # Manual SRMR (semopy does not provide it; see calculate_srmr_manual)
         print("  Calculating SRMR manually...")
         srmr_s = calculate_srmr_manual(model_single, data_subset)
 
@@ -1663,9 +1660,9 @@ ias_cfa_results = perform_cfa_analysis(
     efa_results=ias_efa_results
 )
 
-# --- Measurement Invariance (if CFA fit is acceptable)
+# --- Measurement invariance (runs whenever a best CFA model exists, regardless of fit)
 ias_invariance_results = None
-# Always run measurement invariance testing
+# Invariance testing is not gated on CFA fit
 if 'best_model' in ias_cfa_results:
     ias_invariance_results = None
 if 'best_model' in ias_cfa_results:
@@ -1677,7 +1674,7 @@ if 'best_model' in ias_cfa_results:
                 model_spec = f"Factor1 =~ {' + '.join(IAS_ITEMS)}"
             else:
                 # Reconstruct from loadings
-                model_spec = "Factor1 =~ " + ' + '.join(IAS_ITEMS)  # Simplified
+                model_spec = "Factor1 =~ " + ' + '.join(IAS_ITEMS)  # Falls back to a single-factor specification
         else:
             model_spec = f"SingleFactor =~ {' + '.join(IAS_ITEMS)}"
         ias_invariance_results = test_measurement_invariance(
@@ -1730,7 +1727,7 @@ if 'best_model' in iats_cfa_results:
     else:
         model_spec = f"SingleFactor =~ {' + '.join(IATS_ITEMS)}"
 
-    # Always run invariance testing (on CFA sample for methodological consistency)
+    # Always run invariance testing, on the CFA sample (the same data as the CFA models)
     iats_invariance_results = test_measurement_invariance(
         data=df_cfa,
         items=IATS_ITEMS,
@@ -2132,7 +2129,7 @@ for predictor, result in all_regression_results['IATS'].items():
 
 print("=" * 80)
 
-#%% EXCEL OUTPUT - REFACTORED FUNCTIONS
+#%% EXCEL OUTPUT FUNCTIONS
 print("\n" + "=" * 80)
 print("PREPARING EXCEL OUTPUT")
 print("=" * 80)

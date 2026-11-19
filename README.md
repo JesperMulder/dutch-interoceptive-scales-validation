@@ -25,7 +25,7 @@ This repository contains analysis scripts and documentation for the psychometric
 - **Exploratory Factor Analysis (EFA)**
   - Parallel analysis for factor determination
   - Principal axis factoring with oblique (oblimin) rotation
-  - Polychoric correlations for ordinal data
+  - Pearson correlations on the ordinal items (polychoric correlations are not computed)
   - KMO and Bartlett's test for factorability
   
 - **Confirmatory Factor Analysis (CFA)**
