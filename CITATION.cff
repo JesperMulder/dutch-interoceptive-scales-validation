@@ -6,6 +6,7 @@ authors:
   - family-names: Mulder
     given-names: Jesper
     affiliation: Leiden University Medical Center
+    orcid: "https://orcid.org/0009-0003-1501-7331"
 repository-code: "https://github.com/JesperMulder/dutch-interoceptive-scales-validation"
 license: MIT
 date-released: "2026-05-13"
@@ -15,3 +16,25 @@ keywords:
   - psychometrics
   - factor analysis
   - measurement invariance
+preferred-citation:
+  type: article
+  title: "Reliability and validity of the Dutch interoceptive accuracy scale and interoceptive attention scale"
+  authors:
+    - family-names: Mulder
+      given-names: Jesper
+      orcid: "https://orcid.org/0009-0003-1501-7331"
+    - family-names: Elferink-Gemser
+      given-names: Marije T.
+      orcid: "https://orcid.org/0000-0003-2555-4782"
+    - family-names: de Vries
+      given-names: Juriena D.
+      orcid: "https://orcid.org/0000-0002-9385-2290"
+    - family-names: Kiefte-de Jong
+      given-names: Jessica C.
+      orcid: "https://orcid.org/0000-0002-8136-0918"
+  journal: "Journal of Health Psychology"
+  publisher:
+    name: SAGE Publications
+  doi: "10.1177/13591053261449068"
+  year: 2026
+  month: 5
